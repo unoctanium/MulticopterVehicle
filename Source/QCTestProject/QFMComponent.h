@@ -143,9 +143,9 @@ public:
 	
 	// For UQuadcopterFlightModelEngine
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Max RPM")) float EngineMaxRPM = 1000.0f;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Thrust Coefficient K")) float Engine_K = 50000.0f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Thrust Coefficient K")) float Engine_K = 25000.0f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Thrust Exponent")) float Engine_Q = 2.0f;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Torque Yaw Coefficient")) float Engine_B = 500000.0f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Torque Yaw Coefficient")) float Engine_B = 250000.0f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Torque Exponent")) float Engine_QQ = 2.0f;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Length of Arm in m")) float Engine_L = 2.0f;
 	

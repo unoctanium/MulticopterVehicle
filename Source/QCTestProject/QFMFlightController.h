@@ -130,7 +130,7 @@ struct FEngineController
 	// ODO: This comes from calculation ??? or a parameter ???
 	float GetThrottleHover()
 	{
-		return 0;
+		return 0.5;
 	}
 
 };
@@ -212,8 +212,15 @@ struct FFlightController
 	FBodyInstance *bodyInst;
 	USceneComponent *rootComponent;
 	FVector4 *PilotInput;
-	FEngineController *EngineController;
-	FAHRS *AHRS;
+	
+	
+	
+	/*--- INTERFACE DATA ---*/
+	// Copy of Parent Data. Put inside here during Tock ??
+	// Or shall I leave it like it is: as children of the Flight Controller?
+	// ODO: TODO
+	FEngineController EngineController;
+	FAHRS AHRS;
 
 
 
@@ -301,8 +308,8 @@ struct FFlightController
 	void Relax()
 	{
 
-		AttitudeTargetQuat = FQuat(FRotator(AHRS->BodyRotation.GetInverse())); // in degs
-		AttitudeTargetAngVel = AHRS->BodyAngularVelocity; // in deg/s
+		AttitudeTargetQuat = FQuat(FRotator(AHRS.BodyRotation.GetInverse())); // in degs
+		AttitudeTargetAngVel = AHRS.BodyAngularVelocity; // in deg/s
 	
 		//AttitudeTargetAngleRate = FRotator(); // ODO: HOW TO SET IT???
 		// ????????
@@ -312,7 +319,7 @@ struct FFlightController
 		// Set reference angular velocity used in angular velocity controller equal
 		// to the input angular velocity and reset the angular velocity integrators.
 		// This zeros the output of the angular velocity controller.
-		RateTargetAngVel = AHRS->BodyAngularVelocity;
+		RateTargetAngVel = AHRS.BodyAngularVelocity;
 
 		// ResetRateControllerITerms
 		RateRollPid.ResetI();
@@ -524,7 +531,7 @@ struct FFlightController
 	float GetPilotDesiredThrottle(float ThrottleIn, float ThrottleMidIn = 0.0f)
 	{
 		if (ThrottleMidIn <= 0.0f) {
-			ThrottleMidIn = EngineController->GetThrottleHover();
+			ThrottleMidIn = EngineController.GetThrottleHover();
 		}
 
 		float MidStick = GetThrottleMid();

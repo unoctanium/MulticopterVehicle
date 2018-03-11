@@ -415,7 +415,7 @@ struct FFlightController
 		float ThrottleScaled;
 
 		GetPilotDesiredAngleRates(PilotInput->X, PilotInput->Y, PilotInput->Z, TargetRollRate, TargetPitchRate, TargetYawRate);
-		TargetYawRate = GetPilotDesiredYawRate(PilotInput->Z);
+		//TargetYawRate = GetPilotDesiredYawRate(PilotInput->Z);
 		ThrottleScaled = GetPilotDesiredThrottle(PilotInput->W);
 
 		InputRateBodyRollPitchYaw(TargetRollRate, TargetPitchRate, TargetYawRate);

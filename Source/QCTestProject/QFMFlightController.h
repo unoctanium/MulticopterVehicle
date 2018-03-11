@@ -4,19 +4,12 @@
 //////////////////////////////
 
 //////////////////////////////
-
+// WORK IN PROGRESS
 //////////////////////////////
 
 //////////////////////////////
 
-
-
-
-
-
-
-
-
+//////////////////////////////
 
 #pragma once
 
@@ -60,6 +53,15 @@ struct FAHRS
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Velocity in deg/s")) FVector AngularVelocity = FVector(0.0f, 0.0f, 0.0f);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Linear Acceleration in m/s^2")) float LinearAcceleration = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Acceleration in deg/s^2")) FVector AngularAcceleration = FVector(0.0f, 0.0f, 0.0f);
+
+
+
+	// ODO: Need these for FlightController
+	// Overthink old values above...
+	UPROPERTY() FVector WorldPosition;
+	UPROPERTY() FRotator BodyRotation; // World Rotation
+	UPROPERTY() FVector BodyAngularVelocity;
+
 
 
 	FRotator GetRotationDeg()
@@ -137,6 +139,26 @@ struct FEngineController
 
 
 
+/*--- Implementation of the PID Controllers ---*/
+USTRUCT(BlueprintType)
+struct FPIDController
+{
+	GENERATED_BODY()
+
+	UPROPERTY() float delete_me;
+
+
+	void ResetI()
+	{
+		// TODO
+	}
+
+};
+
+
+
+
+
 
 
 
@@ -169,15 +191,31 @@ struct FFlightController
 
 
 	
+	/*--- PRIVATE ---*/
+
+	// Targets
+	UPROPERTY() FQuat AttitudeTargetQuat;
+	UPROPERTY() FRotator AttitudeTargetRotator;
+	UPROPERTY() FVector AttitudeTargetAngVel;
+	//UPROPERTY() FRotator AttitudeTargetAngleRate; // Do I need it?
+	UPROPERTY() FVector RateTargetAngVel;
+
+	// PIDs
+	UPROPERTY() FPIDController RateRollPid;
+	UPROPERTY() FPIDController RatePitchPid;
+	UPROPERTY() FPIDController RateYawPid;
+
 
 	/*--- INTERFACE DATA ---*/
 	// Copy of Parent Data. Put inside here during Tock 
-	UPROPERTY() float DeltaTime;
-	UPROPERTY() FBodyInstance *bodyInst;
-	UPROPERTY() USceneComponent *rootComponent;
-	UPROPERTY() FVector4 *PilotInput;
-	UPROPERTY() FEngineController *EngineController;
-	UPROPERTY() FAHRS *AHRS;
+	float DeltaTime;
+	FBodyInstance *bodyInst;
+	USceneComponent *rootComponent;
+	FVector4 *PilotInput;
+	FEngineController *EngineController;
+	FAHRS *AHRS;
+
+
 
 
 
@@ -190,6 +228,12 @@ struct FFlightController
 		bodyInst = bodyInstIn;
 		rootComponent = rootComponentIn;
 
+		// set up the PID Controllers?
+		// ??????
+
+		// Reset PID parameters etc
+		Relax();
+		
 		// we start in Stabilize mode
 		SelectFlightMode(EFlightMode::FM_Stabilize);
 	}
@@ -227,14 +271,14 @@ struct FFlightController
 
 	void InitModeStabilize()
 	{
-		SetPosControlAltTarget(0.0f);
+		PosControlSetAltTarget(0.0f);
 	}
 
 
 	void InitModeAltHold()
 	{
-		SetPosControlVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
-		SetPosControlAccelZ(PilotZAccel);
+		PosControlSetVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
+		PosControlSetAccelZ(PilotZAccel);
 
 		if (!PosControlIsActiveZ())
 		{
@@ -246,7 +290,35 @@ struct FFlightController
 
 	void InitModeAccro()
 	{
-		SetPosControlAltTarget(0.0f);
+		PosControlSetAltTarget(0.0f);
+	}
+
+
+
+	/*--- Reset ---*/
+
+	// Ensure attitude controller have zero errors to relax rate controller output
+	void Relax()
+	{
+
+		AttitudeTargetQuat = FQuat(FRotator(AHRS->BodyRotation.GetInverse())); // in degs
+		AttitudeTargetAngVel = AHRS->BodyAngularVelocity; // in deg/s
+	
+		//AttitudeTargetAngleRate = FRotator(); // ODO: HOW TO SET IT???
+		// ????????
+
+		AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
+
+		// Set reference angular velocity used in angular velocity controller equal
+		// to the input angular velocity and reset the angular velocity integrators.
+		// This zeros the output of the angular velocity controller.
+		RateTargetAngVel = AHRS->BodyAngularVelocity;
+
+		// ResetRateControllerITerms
+		RateRollPid.ResetI();
+		RatePitchPid.ResetI();
+		RateYawPid.ResetI();
+
 	}
 
 
@@ -283,7 +355,7 @@ struct FFlightController
 	void TockModeDirect()
 	{
 		InputDirectRollPitchYaw(PilotInput->X, PilotInput->Y, PilotInput->Z);
-		ThrottleScaled = GetPilotDesiredThrottle(PilotInput->W);
+		float ThrottleScaled = GetPilotDesiredThrottle(PilotInput->W);
 		SetThrottleOut(ThrottleScaled, false);
 	}
 
@@ -308,8 +380,8 @@ struct FFlightController
 
 		float TakeoffClimbRate = 0.0f;
 
-		SetPosControlVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
-		SetPosControlAccelZ(PilotZAccel);
+		PosControlSetVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
+		PosControlSetAccelZ(PilotZAccel);
 
 		float TargetRoll;
 		float TargetPitch;
@@ -322,7 +394,7 @@ struct FFlightController
 		TargetClimbRate = FMath::Clamp<float>(TargetClimbRate, -PilotMaxSpeedDown, PilotMaxSpeedUp);
 
 		InputAngleRollPitchRateYaw(TargetRoll, TargetPitch, TargetYawRate);
-		PosControlSetAltTargetFromClimbRate(TargetClimbRate, false);
+		PosControlSetAltTargetFromClimbRate(TargetClimbRate);
 		PosControlUpdateZController();
 
 	}
@@ -378,7 +450,7 @@ struct FFlightController
 	// returns desired angle rates in degrees-per-second 
 	void GetPilotDesiredAngleRates(float RollIn, float PitchIn, float YawIn, float &RollRateOut, float &PitchrateOut, float &YawRateOut)
 	{
-		float RateLimit;
+		//float RateLimit;
 		float RollOut;
 		float PitchOut;
 		float YawOut;
@@ -527,19 +599,81 @@ struct FFlightController
 	/*--- INPUT FUNCTIONS: INPUT DATA INTO FLIGHT CONTROLLER ---*/
 
 
+	// Command an angular roll, pitch and rate yaw with angular velocity feedforward and smoothing 
+	void InputAngleRollPitchRateYaw(float RollIn, float PitchIn, float YawRateIn)
+	{
+
+		AttitudeTargetRotator.Roll = RollIn;
+		AttitudeTargetRotator.Pitch = PitchIn;
+		AttitudeTargetRotator.Yaw += YawRateIn * DeltaTime;
+		AttitudeTargetRotator.Clamp();
+
+		// Compute quaternion target attitude
+		AttitudeTargetQuat = FQuat(AttitudeTargetRotator);
+
+		// Set rate feedforward requests to zero 
+		AttitudeTargetAngVel = FVector(0.0f, 0.0f, 0.0f);
+		//AttitudeTargetAngRates = FRotator(0.0f, 0.0f, 0.0f);
+
+		// Call quaternion attitude controller
+		RunQuat();
+
+	}
+	
+
+	void InputRateBodyRollPitchYaw(float RollRateIn, float PitchRateIn, float YawRateIn)
+	{
+
+		FQuat AttitudeTargetUpdateQuat;
+
+		// calculate the attitude target euler angles 
+		AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
+
+		FQuat AttituteTargetUpdateQuat;
+		FVector fvect = FMath::DegreesToRadians(FVector(RollRateIn * DeltaTime, PitchRateIn * DeltaTime, YawRateIn * DeltaTime));
+		float theta = fvect.Size();
+		if (theta == 0.0f) {
+			AttitudeTargetUpdateQuat = FQuat(1.0f, 0.0f, 0.0f, 0.0f);
+		}
+		else
+		{
+			fvect /= theta;
+			AttituteTargetUpdateQuat = FQuat(fvect, theta);
+		}
+
+		AttitudeTargetQuat = AttitudeTargetQuat * AttitudeTargetUpdateQuat;
+		AttitudeTargetQuat.Normalize();
+
+		// Set rate feedforward requests to zero 
+		AttitudeTargetAngVel = FVector(0.0f, 0.0f, 0.0f);
+		//AttitudeTargetAngRates = FRotator(0.0f, 0.0f, 0.0f);
+
+		// Call quaternion attitude controller
+		RunQuat();
+
+	}
+
+
+	void InputDirectRollPitchYaw(float RollIn, float PitchIn, float YawIn)
+	{
+		// ODO: TODO
+	}
+
+
+
+	/* --- RUN QUAT --- */
+
+	void RunQuat()
+	{
+		// ODO: TODO
+	}
 
 
 
 
 
 
-
-
-
-
-
-
-	/*--- HELPER FUNCTIONS ---*/
+	/*--- THROTTLE FUNCTIONS ---*/
 
 
 	// Helper Function
@@ -548,52 +682,79 @@ struct FFlightController
 		//get_throttle_mid() 
 		// ????????????????????????? 
 		// Maybe this is from Engine Control???
+		return 0.5;
+	}
+
+	float SetThrottleOut(float ThrottleIn, bool ResetAttitudeController = true)
+	{
+		// ODO:TODO
+		return 1.0;
+		
+	}
+
+	
+	float GetThrottleHover()
+	{
+		
+		// motors->get_throttle_hover(); 
+		// ????????????????????????? 
+		// Maybe this is from Engine Control???
+		return 0.5;
 	}
 
 
 
 
+	/* --- POS CONTROLLER --- */
 
 
+	void PosControlSetAltTarget(float AltIn)
+	{
+		//pos_control->set_alt_Target(f) 
+	}
+
+
+	void PosControlSetVelocityZ(float SpeedDownIn, float SpeedUpIn)
+	{
+		//sets maximum climb and descent rates 
+		//pos_control->set_speed_z 
+	}
+
+	void PosControlSetAccelZ(float AccelIn)
+	{
+		//sets maximum climb and descent acceleration 
+		//pos_control->set_accel_z 
+	}
+
+	bool PosControlIsActiveZ()
+	{
+		// pos_control->is_active_z() 
+		return true;
+	}
+
+	void PosControlSetAltTargetToCurrentAlt()
+	{
+		//pos_control->set_alt_target_to_current_alt(); 
+	}
+
+	void PosControlSetDesiredVelocityZ(float VelocityIn)
+	{
+		//sets Desired climb/descent rate 
+		//pos_control->set_desired_velocity_z 
+	}
+
+	void PosControlSetAltTargetFromClimbRate(float TargetClimbRate)
+	{
+		//set_alt_target_from_climb_rate_ff 
+	}
+
+
+	void PosControlUpdateZController()
+	{
+		//pos_control->update_z_controller(); 
+	}
 
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//////////////////////////////
-
-//////////////////////////////
-
-//////////////////////////////
-
-//////////////////////////////
-
-//////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
 
 

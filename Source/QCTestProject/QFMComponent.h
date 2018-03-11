@@ -21,6 +21,7 @@
 
 #include "QFMDebug.h"
 #include "QFMTrajectory.h"
+#include "QFMFlightController.h"
 
 #include "QFMComponent.generated.h"
 
@@ -76,10 +77,31 @@ public:
     /*--- GENERAL ---*/
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta =(ToolTip="Disable to turn off simulation")) bool Enabled = true;
     	
-		/*--- TRAJECTORY CALCULATOR---*/
+	/*--- TRAJECTORY CALCULATOR---*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Quadcopter Trajectory")) FQuadcopterFlightModelTrajectoryStruct Trajectory;
 
 	
+	///////////////////////////
+	// THIS IS WORK IN PROGRESS
+	///////////////////////////
+
+	///////////////////////////
+
+	///////////////////////////
+
+	/*--- FLIGHT CONTROLLER ---*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Quadcopter FlightController")) FFlightController FlightController;
+
+
+	///////////////////////////
+
+	///////////////////////////
+
+
+
+
+
+
     /*--- PHYSICS IMPLEMENTATION ---*/
     
     //UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta =(ToolTip="Use transformation of this component instead of parent body to determine forward direction etc" )) bool UseThisComponentTransform = false;

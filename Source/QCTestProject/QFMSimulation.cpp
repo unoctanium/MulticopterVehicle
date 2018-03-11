@@ -42,6 +42,26 @@ void UQuadcopterFlightModel::Simulate(FBodyInstance* bodyInst, float DeltaTime) 
 	DesiredPilotInput = NewInputStick;
 	DesiredPilotInput.W = DesiredPilotInput.W / 2.0f + 0.5f; 
 
+
+
+	///////////////////////////
+	// THIS IS WORK IN PROGRESS
+	///////////////////////////
+
+	///////////////////////////
+
+	///////////////////////////
+
+	FlightController.Tock(DeltaTime, &DesiredPilotInput);
+
+	///////////////////////////
+
+	///////////////////////////
+
+
+
+
+
 	// Mix Pilot Input to meet Frame Mode 
 	MixEngines();
 	

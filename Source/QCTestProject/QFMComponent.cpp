@@ -95,6 +95,26 @@ void UQuadcopterFlightModel::BeginPlay()
 	
 
 
+
+	///////////////////////////
+	// THIS IS WORK IN PROGRESS
+	///////////////////////////
+
+	///////////////////////////
+
+	///////////////////////////
+
+	FlightController.Init(BodyInstance, Parent);
+
+	///////////////////////////
+
+	///////////////////////////
+
+
+
+
+
+
 	// Prepare Substepping, if requested
 	const UPhysicsSettings* Settings = GetDefault<UPhysicsSettings>();
 	if (Settings) {

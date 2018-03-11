@@ -57,29 +57,7 @@ void UQuadcopterFlightModel::Simulate(FBodyInstance* bodyInst, float DeltaTime) 
 	AddLocalTorqueRad(GetEngineTorque());
 
 
-
-	
-	// This will be Old!!!!
-	// Apply New Forces
-	///!!!!!!!!!!!!!!!! KEEEEPPPPPP
-	/*
-	FVector torqueScale = FVector(TestTorque, TestTorque, TestTorque);
-	FVector forceScale = FVector(0.0f, 0.0f, TestForce);
-	FVector torqueToApply = FVector(PilotInput->GetRotation() * torqueScale);
-	//FVector torqueToApply = Trajectory.GetAngularForceToApplyRad(FVector(0.0f, 0.0f, FMath::DegreesToRadians(45.0f)), 10.0);
-	FVector forceToApply = FVector(PilotInput->GetTranslation() * forceScale);
-	AddLocalForceZ(forceToApply);
-	AddLocalTorqueRad(torqueToApply);
-    	*/
-	///////////////////////
-
-
-
-
-
-	
-
-    
+	  
     #ifdef WITH_EDITOR
     
         if (Debug.DebugScreen) {

@@ -37,8 +37,9 @@ public:
 
 
 	// Root Component of our Pawn
-	UPROPERTY(Category = "QuadcopterPawn", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		USceneComponent *PawnRoot;
+    // I changed the root component to the Mesh!! To revert this: uncomment the following two lines and change the initialization in AcPawn::AcPawn()
+	//UPROPERTY(Category = "QuadcopterPawn", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	//	USceneComponent *PawnRoot;
 
 	// StaticMesh component that will be the visuals for our flying pawn
 	UPROPERTY(Category = "QuadcopterPawn", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

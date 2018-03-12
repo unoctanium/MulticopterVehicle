@@ -8,10 +8,7 @@ void UQuadcopterFlightModel::Simulate(FBodyInstance* bodyInst, float DeltaTime) 
     // only do something if time ellapsed
     if (DeltaTime <= 0.0f) { return; }
 
-	// Find our Parent
-	//UPrimitiveComponent* Parent = Cast<UPrimitiveComponent>(GetAttachParent());
-
-
+    
 	// calc the actual Trajectory
 	FTransform bodyTransform = Parent->GetComponentTransform();
 	Trajectory.Position = bodyTransform.GetTranslation() / 100.0f; // in m

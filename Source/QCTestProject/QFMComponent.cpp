@@ -42,9 +42,9 @@ void UQuadcopterFlightModel::BeginPlay()
 	PRigidBody = BodyInstance->GetPxRigidBody_AssumesLocked();
 	
 
-	#if WITH_PHYSX
-	ScreenMsg("Got into PhysX!!!");
-#endif
+//	#if WITH_PHYSX
+//	ScreenMsg("Got into PhysX!!!");
+//  #endif
 
 	
 	// Mass, COM and and Inertia overrides
@@ -140,9 +140,6 @@ void UQuadcopterFlightModel::TickComponent(float DeltaTime, ELevelTick TickType,
 		Simulate(BodyInstance, DeltaTime);
 	}
 }
-
-
-
 
 
 

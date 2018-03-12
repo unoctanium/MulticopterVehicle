@@ -8,18 +8,22 @@ AQCPawn::AQCPawn()
 
 	PrimaryActorTick.bCanEverTick = true;
 
-
-	// Create a Scene component as the root component of our pawn
-	
-	PawnRoot = CreateDefaultSubobject<USceneComponent>(TEXT("QuadcopterRootComponent"));
-	RootComponent = PawnRoot;
-		
-	// Create and position a mesh component so we can see where our Pawn is
-	
+    // New: Create a Mesh component as the root component of our pawn
 	PawnMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("QuadcopterMesh"));
-	PawnMesh->SetupAttachment(RootComponent);
-	
-
+    RootComponent = PawnMesh;
+    
+    // Old: Create a Scene component as the root component of our pawn
+    /*
+    // Create a Scene component as the root component of our pawn
+    PawnRoot = CreateDefaultSubobject<USceneComponent>(TEXT("QuadcopterRootComponent"));
+    RootComponent = PawnRoot;
+     
+    // Create and position a mesh component so we can see where our Pawn is
+    PawnMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("QuadcopterMesh"));
+    PawnMesh->SetupAttachment(RootComponent);
+    */
+    
+    
 	// And load a mesh into it
 	
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshVisualAsset(TEXT("/Game/QC/Meshes/3DFly")); 
@@ -41,13 +45,13 @@ AQCPawn::AQCPawn()
 	PawnMesh->SetLinearDamping(0.15f);
 	PawnMesh->SetAngularDamping(0.15f);
 
-
-	
+    
 	// Create a Quadcopter Component
 	
 	QuadcopterFlightModel = CreateAbstractDefaultSubobject<UQuadcopterFlightModel>(TEXT("Quadcopter Flight Model"));
 	QuadcopterFlightModel->SetupAttachment(PawnMesh);
 
+    
 	// Create the FPV camera
 	
 	createCameraWithSpringArm(L"FpvCamera", &FpvCamera, L"FpvCameraSpringArm",

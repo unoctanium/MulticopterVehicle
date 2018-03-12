@@ -3,8 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine.h"
+
 #include "GameFramework/Pawn.h"
+#include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
+
+#include "UObject/ConstructorHelpers.h"
 
 #include "HeadMountedDisplay.h"
 #include "IXRTrackingSystem.h"

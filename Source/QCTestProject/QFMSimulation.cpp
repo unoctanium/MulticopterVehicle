@@ -1,11 +1,6 @@
 
-
-//#include "QFMPlugin.h"
 #include "QFMComponent.h"
-#include "DrawDebugHelpers.h"
-#include "Engine.h"
-#include "Math/Vector2D.h"
-#include "Math/Vector4.h"
+
 
 //Actual simulation
 void UQuadcopterFlightModel::Simulate(FBodyInstance* bodyInst, float DeltaTime) {

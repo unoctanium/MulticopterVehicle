@@ -1,15 +1,5 @@
 
-//#include "QFMPlugin.h"
 #include "QFMComponent.h"
-
-//#include "QCTestPawn.h"
-//#include "QCTestProject.h"
-
-#include "PhysXIncludes.h"
-#include "PhysicsPublic.h"
-#include "PhysXPublic.h"
-#include "Classes/PhysicsEngine/PhysicsSettings.h"
-#include "Runtime/Engine/Private/PhysicsEngine/PhysXSupport.h"
 
 
 UQuadcopterFlightModel::UQuadcopterFlightModel()

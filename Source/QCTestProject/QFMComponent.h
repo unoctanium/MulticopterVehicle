@@ -1,23 +1,22 @@
 
-// ODO: GetMappedAndClampedValue kann ich bestimmt noch optimieren
-
 
 #pragma once
 
-//#include "QFMPlugin.h"
 
-#include "Engine.h"
-#include "Components/SceneComponent.h"
 
 #include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
 
+#include "Components/SceneComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
-#include "Engine/World.h"
 
-#include "GameFramework/Pawn.h"
-#include "HeadMountedDisplay.h"
-#include "IXRTrackingSystem.h"
+#include "DrawDebugHelpers.h"
+
+#include "PhysXIncludes.h"
+#include "PhysicsPublic.h"
+#include "PhysXPublic.h"
+#include "Classes/PhysicsEngine/PhysicsSettings.h"
+#include "Runtime/Engine/Private/PhysicsEngine/PhysXSupport.h"
 
 #include "QFMDebug.h"
 #include "QFMTrajectory.h"

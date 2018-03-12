@@ -1,15 +1,9 @@
 #pragma once
 
-
-//#include "QFMPlugin.h"
-
 #include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
-#include "Engine.h"
+
 #include "Components/SceneComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
-#include "Math/Vector2D.h"
-#include "Math/Vector4.h"
 
 #include "QFMTrajectory.generated.h"
 

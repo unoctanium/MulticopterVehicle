@@ -165,6 +165,32 @@ void UQuadcopterFlightModel::InputKillTrajectory()
 }
 
 
+// Engine related stuff. These are callable from Blueprint
+
+float UQuadcopterFlightModel::GetEnginePercent(int engineNumber) 
+{ 
+	return EngineController.GetEnginePercent(engineNumber); 
+}
+
+
+float UQuadcopterFlightModel::GetEngineRPM(int engineNumber) 
+{ 
+	return EngineController.GetEngineRPM(engineNumber);
+}
+
+
+FVector UQuadcopterFlightModel::GetTotalThrust() 
+{	
+	return EngineController.GetTotalThrust(); 
+}
+
+
+FVector UQuadcopterFlightModel::GetTotalTorque() 
+{	
+	return EngineController.GetTotalTorque(); 
+}
+
+
 
 
 

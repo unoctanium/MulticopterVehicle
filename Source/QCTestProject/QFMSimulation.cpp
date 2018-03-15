@@ -3,7 +3,7 @@
 
 
 //Actual simulation
-void UQuadcopterFlightModel::Simulate(FBodyInstance* bodyInst, float DeltaTime) {
+void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) {
 
     // only do something if time ellapsed
     if (DeltaTime <= 0.0f) { return; }
@@ -15,7 +15,7 @@ void UQuadcopterFlightModel::Simulate(FBodyInstance* bodyInst, float DeltaTime) 
 	AHRS.Tock(DeltaTime);
 
 	// Call Flight Controller to calculate angine outputs based on actual attitude and pilot input
-	AttitudeController.Tock(DeltaTime, DesiredPilotInput);
+	AttitudeController.Tock(DeltaTime, PilotInput.GetDesiredInput());
 
 	// update Position Controller
 	PositionController.Tock(DeltaTime);
@@ -24,7 +24,7 @@ void UQuadcopterFlightModel::Simulate(FBodyInstance* bodyInst, float DeltaTime) 
 	EngineController.Tock(DeltaTime, PilotInput.GetDesiredInput(), FrameMode);
 
 	// And Apply Forces calculated in Engine Control
-	AddLocalForceZ(EmgineController.GetTotalThrust());
+	AddLocalForceZ(EngineController.GetTotalThrust());
 	AddLocalTorqueRad(EngineController.GetTotalTorque());
 
     #ifdef WITH_EDITOR
@@ -47,16 +47,16 @@ void UQuadcopterFlightModel::Simulate(FBodyInstance* bodyInst, float DeltaTime) 
 				PilotInput.Debug(Debug.Color, Debug.FontSize);
 			}
 
-			if (Debug.AttitudeControl) {
+			if (Debug.PrintAttitudeControl) {
 				AttitudeController.Debug(Debug.Color, Debug.FontSize);
 			}
 			
-			if (Debug.PositionControl) {
+			if (Debug.PrintPositionControl) {
 				PositionController.Debug(Debug.Color, Debug.FontSize);
 			}
 
 			if (Debug.PrintEngineControl) {
-				EngineControl.Debug(Debug.Color, Debug.FontSize)
+				EngineController.Debug(Debug.Color, Debug.FontSize);
 			}
 			
 			//Debug.Debug(Debug.Color, Debug.FontSize);

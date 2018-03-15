@@ -143,10 +143,10 @@ public:
 	float GetEnginePercent(int engineNumber);
 	
 	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|Engine")	
-	FVector GetEngineThrust();
+	FVector GetTotalThrust();
 	
 	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|Engine") 
-	FVector GetEngineTorque();
+	FVector GetTotalTorque();
 		
     
     // Called when the game starts

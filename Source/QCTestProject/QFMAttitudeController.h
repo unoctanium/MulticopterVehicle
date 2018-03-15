@@ -6,8 +6,13 @@
 #include "Components/SceneComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
 
-#include "QFMFlightMode.h"
+#include "QFMTypes.h"
 #include "QFMPIDController.h"
+
+
+#include "QFMPositionController.h"
+#include "QFMEngineController.h"
+#include "QFMAHRS.h"
 
 #include "QFMAttitudeController.generated.h"
 
@@ -95,18 +100,18 @@ struct FAttitudeController
 	UPrimitiveComponent *PrimitiveComponent;
 	
 	FAHRS *AHRS;
-	FPositionController *PositionController
+	FPositionController *PositionController;
 	FEngineController *EngineController;
 	
 	/*--- INIT FLIGHT MODES ---*/
 
 
-	void Init(FBodyInstance *bodyInstanceIn, UPrimitiveComponent *primitiveComponentIn, FAHRS *AHRSIn, FPositionController * PositionControllerIn, FEngineController *EngineControllerIn)
+	void Init(FBodyInstance *BodyInstanceIn, UPrimitiveComponent *PrimitiveComponentIn, FAHRS *AHRSIn, FPositionController * PositionControllerIn, FEngineController *EngineControllerIn)
 	{
 		// Set up Interface
 	
-		BodyInstance = bodyInstanceIn;
-		PrimitiveComponent = primtitiveComponentIn;
+		BodyInstance = BodyInstanceIn;
+		PrimitiveComponent = PrimitiveComponentIn;
 		AHRS = AHRSIn;
 		PositionController = PositionControllerIn;
 		EngineController = EngineControllerIn;
@@ -185,7 +190,7 @@ struct FAttitudeController
 	void Relax()
 	{
 
-		AttitudeTargetQuat = FQuat(FRotator(AHRS->BodyRotation->GetInverse())); // in degs
+		AttitudeTargetQuat = FQuat(FRotator(AHRS->BodyRotation.GetInverse())); // in degs
 		AttitudeTargetAngVel = AHRS->BodyAngularVelocity; // in deg/s
 	
 		//AttitudeTargetAngleRate = FRotator(); // ODO: HOW TO SET IT???
@@ -569,7 +574,7 @@ struct FAttitudeController
     void RunQuat()
     {
 
-		FQuat AttitudeVehicleQuat = AHRS->GetAttitude();
+		FQuat AttitudeVehicleQuat = AHRS->GetAttitudeQuat();
         
         /*
         // Retrieve quaternion vehicle attitude

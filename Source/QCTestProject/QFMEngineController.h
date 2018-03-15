@@ -122,7 +122,7 @@ struct FEngineController
 		SetEnginesFromMixer();
 
 		// Calculate new Forces
-		GetEngineForces();
+		GetEngineForces(FrameMode);
 	}
 
 	
@@ -142,7 +142,7 @@ struct FEngineController
 
 
 
-	void GetEngineForces()
+	void GetEngineForces(EFrameMode FrameMode)
 	{
 
 

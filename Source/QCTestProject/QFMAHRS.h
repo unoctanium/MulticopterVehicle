@@ -31,39 +31,37 @@ struct FAHRS
     
 
 
-	FBodyInstance *bodyInst;
-	USceneComponent *rootComponent;
+	FBodyInstance *BodyInstance;
+	UPrimitiveComponent *PrimitiveComponent;
 
 
-	void Init(FBodyInstance *bodyInstanceIn, UPrimitiveComponent *primitiveComponentIn)
+	void Init(FBodyInstance *BodyInstanceIn, UPrimitiveComponent *PrimitiveComponentIn)
 	{
 		// Need these Vectors to read data from those components
-		bodyInstance = bodyInstanceIn;
-		primitiveComponent = primitiveComponentIn;
+		BodyInstance = BodyInstanceIn;
+		PrimitiveComponent = PrimitiveComponentIn;
 	}
 
 
 	void Tock(float DeltaTime)
 	{
-	FTransform bodyTransform = Parent->GetComponentTransform();
-	Trajectory.Position = bodyTransform.GetTranslation() / 100.0f; // in m
-	Trajectory.Rotation = bodyTransform.GetRotation().Rotator(); // in deg
-	float OldLinearVelocity = Trajectory.LinearVelocity;
-	Trajectory.LinearVelocity = bodyInst->GetUnrealWorldVelocity().Size() / 100.0f; // TAS in m/s
-	Trajectory.VelocityVector = bodyInst->GetUnrealWorldVelocity() / 100.0f; // in m / s
-	Trajectory.LinearVelocity2D = bodyInst->GetUnrealWorldVelocity().Size2D() / 100.0f; // Speed over ground
-	FVector OldAngularVelocity = FVector(Trajectory.AngularVelocity);
-	Trajectory.AngularVelocity = FMath::RadiansToDegrees(bodyInst->GetUnrealWorldAngularVelocityInRadians());
-	Trajectory.LinearAcceleration = (OldLinearVelocity - Trajectory.LinearVelocity) / DeltaTime;
-	Trajectory.AngularAcceleration = (OldAngularVelocity - Trajectory.AngularVelocity) / DeltaTime;
-
-
-
+		FTransform bodyTransform = PrimitiveComponent->GetComponentTransform();
+		Position = bodyTransform.GetTranslation() / 100.0f; // in m
+		Rotation = bodyTransform.GetRotation().Rotator(); // in deg
+		float OldLinearVelocity = LinearVelocity;
+		LinearVelocity = BodyInstance->GetUnrealWorldVelocity().Size() / 100.0f; // TAS in m/s
+		VelocityVector = BodyInstance->GetUnrealWorldVelocity() / 100.0f; // in m / s
+		LinearVelocity2D = BodyInstance->GetUnrealWorldVelocity().Size2D() / 100.0f; // Speed over ground
+		FVector OldAngularVelocity = FVector(AngularVelocity);
+		AngularVelocity = FMath::RadiansToDegrees(BodyInstance->GetUnrealWorldAngularVelocityInRadians());
+		LinearAcceleration = (OldLinearVelocity - LinearVelocity) / DeltaTime;
+		AngularAcceleration = (OldAngularVelocity - AngularVelocity) / DeltaTime;
 	}
 
 
-	FQUAT GetAttitudeQuat()
+	FQuat GetAttitudeQuat()
 	{
+		return Rotation.Quaternion();
 	}
 
 

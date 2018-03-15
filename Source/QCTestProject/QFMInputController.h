@@ -82,7 +82,7 @@ struct FInputController
 
 
 
-	FVextor4 GetDesiredInput()
+	FVector4 GetDesiredInput()
 	{
 		return DesiredPilotInput;
 	}
@@ -105,7 +105,7 @@ struct FInputController
 	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, TEXT("Pilot Input: (R,P,Y,T) ") + DesiredPilotInput.ToString(), true, DebugFontSizeIn);
-		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Pilot Input: R=%f P=%f Y=%f T=%f"), PilotInput.DesiredPilotInput.X, DesiredPilotInput.Y, DesiredPilotInput.Z, DesiredPilotInput.W), true, DebugFontSizeIn);
+		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Pilot Input: R=%f P=%f Y=%f T=%f"), DesiredPilotInput.X, DesiredPilotInput.Y, DesiredPilotInput.Z, DesiredPilotInput.W), true, DebugFontSizeIn);
 		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Raw Axis Input: R=%f P=%f Y=%f T=%f"), RollAxisInput, PitchAxisInput, YawAxisInput, ThrottleAxisInput), true, DebugFontSizeIn);		
 	}
 

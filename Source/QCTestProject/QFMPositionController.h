@@ -12,10 +12,6 @@
 
 
 
-
-
-
-
 /*--- Implementatrion of the Position-Controller ---*/
 USTRUCT(BlueprintType)
 struct FPositionController

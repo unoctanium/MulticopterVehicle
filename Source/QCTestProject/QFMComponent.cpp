@@ -85,23 +85,12 @@ void UQuadcopterFlightModel::BeginPlay()
 	
 
 
-
-	///////////////////////////
-	// THIS IS WORK IN PROGRESS
-	///////////////////////////
-
-	///////////////////////////
-
-	///////////////////////////
-
-	FlightController.Init(BodyInstance, Parent);
-
-	///////////////////////////
-
-	///////////////////////////
-
-
-
+	// Init all our Subsystems
+	PilotInput.Init(BodyInstance, Parent);
+	AHRS.Init(BodyInstance, Parent);
+	AttitudeController.Init(BodyInstance, Parent, &AHRS, &PositionController, &EngineController);
+	PositionController.Init(BodyInstance, Parent);
+	EngineController.Init(BodyInstance, Parent);
 
 
 
@@ -120,7 +109,7 @@ void UQuadcopterFlightModel::BeginPlay()
 //physics substep
 void UQuadcopterFlightModel::CustomPhysics(float DeltaTime, FBodyInstance* bodyInst)
 {
-	Simulate(bodyInst, DeltaTime);
+	Simulate(DeltaTime, bodyInst);
 }
 
 
@@ -137,7 +126,7 @@ void UQuadcopterFlightModel::TickComponent(float DeltaTime, ELevelTick TickType,
 		BodyInstance->AddCustomPhysics(OnCalculateCustomPhysics);
 	}
 	else {
-		Simulate(BodyInstance, DeltaTime);
+		Simulate(DeltaTime, BodyInstance);
 	}
 }
 
@@ -148,10 +137,26 @@ void UQuadcopterFlightModel::TickComponent(float DeltaTime, ELevelTick TickType,
 
 // Pilot Input Related Stuff
 
-void UQuadcopterFlightModel::InputRoll(float InValue) {	RollAxisInput = InValue; }
-void UQuadcopterFlightModel::InputPitch(float InValue) { PitchAxisInput = InValue; }
-void UQuadcopterFlightModel::InputYaw(float InValue) { YawAxisInput = InValue; }
-void UQuadcopterFlightModel::InputThrottle(float InValue) { ThrottleAxisInput = InValue; }
+void UQuadcopterFlightModel::InputRoll(float InValue) 
+{	
+	PilotInput.RollAxisInput = InValue; 
+}
+
+void UQuadcopterFlightModel::InputPitch(float InValue) 
+{ 
+	PilotInput.PitchAxisInput = InValue; 
+}
+
+void UQuadcopterFlightModel::InputYaw(float InValue) 
+{ 
+	PilotInput.YawAxisInput = InValue; 
+}
+
+void UQuadcopterFlightModel::InputThrottle(float InValue) 
+{ 
+	PilotInput.ThrottleAxisInput = InValue; 
+}
+
 // Reset all speeds and accelerations
 void UQuadcopterFlightModel::InputKillTrajectory()
 {
@@ -160,12 +165,6 @@ void UQuadcopterFlightModel::InputKillTrajectory()
 }
 
 
-// Engine Related Stuff
-
-float UQuadcopterFlightModel::GetEnginePercent(int engineNumber) { return EngineSpeed[engineNumber]; }
-float UQuadcopterFlightModel::GetEngineRPM(int engineNumber) { return EngineSpeed[engineNumber] * EngineMaxRPM; }
-FVector UQuadcopterFlightModel::GetEngineThrust() {	return TotalThrust; }
-FVector UQuadcopterFlightModel::GetEngineTorque() {	return TotalTorque; }
 
 
 

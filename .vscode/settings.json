@@ -1,0 +1,10 @@
+{
+	"typescript.tsc.autoDetect": "off",
+	"files.exclude": {
+		"/Users/odo/Projects/ue4/MulticopterVehicle/.git": true,
+		"/Users/odo/Projects/ue4/MulticopterVehicle/.vscode": true,
+		"/Users/odo/Projects/ue4/MulticopterVehicle/Content": true,
+		"/Users/odo/Projects/ue4/MulticopterVehicle/Intermediate": true
+	},
+	"C_Cpp.intelliSenseEngine": "Tag Parser"
+}

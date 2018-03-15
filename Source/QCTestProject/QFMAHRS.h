@@ -5,10 +5,11 @@
 #include "Components/SceneComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
 
-#include "QFMTrajectory.generated.h"
+#include "QFMAHRS.generated.h"
+
 
 USTRUCT(BlueprintType)
-struct FQuadcopterFlightModelTrajectoryStruct
+struct FAHRS
 {
 	GENERATED_BODY()
 
@@ -20,7 +21,51 @@ struct FQuadcopterFlightModelTrajectoryStruct
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Velocity in deg/s")) FVector AngularVelocity = FVector(0.0f, 0.0f, 0.0f);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Linear Acceleration in m/s^2")) float LinearAcceleration = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Acceleration in deg/s^2")) FVector AngularAcceleration = FVector(0.0f, 0.0f, 0.0f);
-	
+
+
+	// ODO: Need these for FlightController
+	// Overthink old values above...
+    UPROPERTY() FVector WorldPosition;
+    UPROPERTY() FRotator BodyRotation; // NOT!! World Rotation
+	UPROPERTY() FVector BodyAngularVelocity;
+    
+
+
+	FBodyInstance *bodyInst;
+	USceneComponent *rootComponent;
+
+
+	void Init(FBodyInstance *bodyInstanceIn, UPrimitiveComponent *primitiveComponentIn)
+	{
+		// Need these Vectors to read data from those components
+		bodyInstance = bodyInstanceIn;
+		primitiveComponent = primitiveComponentIn;
+	}
+
+
+	void Tock(float DeltaTime)
+	{
+	FTransform bodyTransform = Parent->GetComponentTransform();
+	Trajectory.Position = bodyTransform.GetTranslation() / 100.0f; // in m
+	Trajectory.Rotation = bodyTransform.GetRotation().Rotator(); // in deg
+	float OldLinearVelocity = Trajectory.LinearVelocity;
+	Trajectory.LinearVelocity = bodyInst->GetUnrealWorldVelocity().Size() / 100.0f; // TAS in m/s
+	Trajectory.VelocityVector = bodyInst->GetUnrealWorldVelocity() / 100.0f; // in m / s
+	Trajectory.LinearVelocity2D = bodyInst->GetUnrealWorldVelocity().Size2D() / 100.0f; // Speed over ground
+	FVector OldAngularVelocity = FVector(Trajectory.AngularVelocity);
+	Trajectory.AngularVelocity = FMath::RadiansToDegrees(bodyInst->GetUnrealWorldAngularVelocityInRadians());
+	Trajectory.LinearAcceleration = (OldLinearVelocity - Trajectory.LinearVelocity) / DeltaTime;
+	Trajectory.AngularAcceleration = (OldAngularVelocity - Trajectory.AngularVelocity) / DeltaTime;
+
+
+
+	}
+
+
+	FQUAT GetAttitudeQuat()
+	{
+	}
+
 
 	FRotator GetRotationDeg()
 	{
@@ -53,7 +98,7 @@ struct FQuadcopterFlightModelTrajectoryStruct
 		return FMath::DegreesToRadians<FVector>(AngularAcceleration);
 	}
 
-	
+
 	void Debug(FColor Color, FVector2D DebugFontSize)
 	{
 		// Down to up on the debug screen
@@ -68,11 +113,7 @@ struct FQuadcopterFlightModelTrajectoryStruct
 	}
 
 
-
 };
-
-
-
 
 
 

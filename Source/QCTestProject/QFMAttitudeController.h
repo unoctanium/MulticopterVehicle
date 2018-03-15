@@ -1,16 +1,4 @@
 
-//////////////////////////////
-
-//////////////////////////////
-
-//////////////////////////////
-// WORK IN PROGRESS
-//////////////////////////////
-
-//////////////////////////////
-
-//////////////////////////////
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -18,170 +6,66 @@
 #include "Components/SceneComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
 
-#include "QFMFlightController.generated.h"
+#include "QFMFlightMode.h"
+#include "QFMPIDController.h"
 
-
-/*--- Structure to hold our supported Flight Modes ---*/
-UENUM(BlueprintType)                 
-enum class EFlightMode : uint8
-{
-	FM_Direct		UMETA(DisplayName = "Direct Mode"),
-	FM_Stabilize	UMETA(DisplayName = "Stabilize Mode"),
-	FM_AltHold		UMETA(DisplayName = "Stabilize Mode with Alt Hold"),
-	FM_Accro		UMETA(DisplayName = "Accro Mode")
-};
-
-
-
-/*--- Implementation of the AHRS ---*/
-USTRUCT(BlueprintType)
-struct FAHRS
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Position in m")) FVector Position = FVector(0.0f, 0.0f, 0.0f);
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Rotation in deg")) FRotator Rotation = FRotator(0.0f, 0.0f, 0.0f);
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "LinearVelocity in m/s")) float LinearVelocity = 0.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Velocity Vector in m/s")) FVector VelocityVector = FVector(0.0f, 0.0f, 0.0f);
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "LinearVelocity over Ground in m/s")) float LinearVelocity2D = 0.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Velocity in deg/s")) FVector AngularVelocity = FVector(0.0f, 0.0f, 0.0f);
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Linear Acceleration in m/s^2")) float LinearAcceleration = 0.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Acceleration in deg/s^2")) FVector AngularAcceleration = FVector(0.0f, 0.0f, 0.0f);
-
-
-	// ODO: Need these for FlightController
-	// Overthink old values above...
-    UPROPERTY() FVector WorldPosition;
-    UPROPERTY() FRotator BodyRotation; // NOT!! World Rotation
-	UPROPERTY() FVector BodyAngularVelocity;
-    
-    
-
-
-	FRotator GetRotationDeg()
-	{
-		return Rotation;
-	}
-
-	FRotator GetRotationRad()
-	{
-		return FMath::DegreesToRadians<FRotator>(Rotation);
-	}
-
-	FVector GetAngularVelocityDeg()
-	{
-		return AngularVelocity;
-	}
-
-	FVector GetAngularVelocityRad()
-	{
-		//return FVector(FMath::DegreesToRadians(AngularVelocity.X), FMath::DegreesToRadians(AngularVelocity.Y), FMath::DegreesToRadians(AngularVelocity.Z));
-		return FMath::DegreesToRadians<FVector>(AngularVelocity);
-	}
-
-	FVector GetAngularAccelerationDeg()
-	{
-		return AngularAcceleration;
-	}
-
-	FVector GetAngularAccelerationRad()
-	{
-		return FMath::DegreesToRadians<FVector>(AngularAcceleration);
-	}
-
-
-	void Debug(FColor Color, FVector2D DebugFontSize)
-	{
-		// Down to up on the debug screen
-		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Angular Acceleration (deg/s^2): X=%f Y=%f Z=%f"), AngularAcceleration.X, AngularAcceleration.Y, AngularAcceleration.Z), true, DebugFontSize);
-		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Linear Acceleration (m/s^2): %f"), LinearAcceleration), true, DebugFontSize);
-		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Angular Velocity (deg/s): X=%f Y=%f Z=%f"), AngularVelocity.X, AngularVelocity.Y, AngularVelocity.Z), true, DebugFontSize);
-		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Linear Velocity 2D (m/s): %f"), LinearVelocity2D), true, DebugFontSize);
-		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Linear Velocity Vector (m/s): X=%f Y=%f Z=%f"), VelocityVector.X, VelocityVector.Y, VelocityVector.Z), true, DebugFontSize);
-		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Linear Velocity (m/s): %f"), LinearVelocity), true, DebugFontSize);
-		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Rotation (deg): R=%f P=%f Y=%f"), Rotation.Roll, Rotation.Pitch, Rotation.Yaw), true, DebugFontSize);
-		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Position (m): X=%f Y=%f Z=%f"), Position.X, Position.Y, Position.Z), true, DebugFontSize);
-	}
-
-
-};
-
-
-
-
-
-
-
-/*--- Implementation of the EngineController ---*/
-USTRUCT(BlueprintType)
-struct FEngineController
-{
-	GENERATED_BODY()
-
-	UPROPERTY() float delete_me;
-		
-	// Return Hover Throttle in range 0..1
-	// ODO: This comes from calculation ??? or a parameter ???
-	float GetThrottleHover()
-	{
-		return 0.5;
-	}
-
-};
-
-
-
-
-
-/*--- Implementation of the PID Controllers ---*/
-USTRUCT(BlueprintType)
-struct FPIDController
-{
-	GENERATED_BODY()
-
-	UPROPERTY() float delete_me;
-
-
-	void ResetI()
-	{
-		// TODO
-	}
-
-};
-
-
-
-
-
+#include "QFMAttitudeController.generated.h"
 
 
 
 /*--- Implementatrion of the Attitude and Position Flight-Controller ---*/
 USTRUCT(BlueprintType)
-struct FFlightController
+struct FAttitudeController
 {
 	GENERATED_BODY()
 
 
 	/*--- PARAMETERS ---*/
 
-	UPROPERTY() EFlightMode FlightMode;
+	UPROPERTY() 
+	EFlightMode FlightMode;
 
-	UPROPERTY() float AngleMax = 45.0f; // Max Lean Angle Deg in Stab Mode 
-	UPROPERTY() float SmoothingGain = 0.5f; // Smoothing Value for StabilizerMode. Must be 0..1 
-	UPROPERTY() float AccroThrottleMid = 0.5f; // Zero Pos on Throttle for Accro Mode. Must be 0..1 
-	UPROPERTY() float PilotMaxSpeedDown = 10.0f; // Max Speed Down in m/s in AltHold Mode 
-	UPROPERTY() float PilotMaxSpeedUp = 7.0f; // Max Speed Up in m/s in AltHold Mode 
-	UPROPERTY() float PilotSpeedDown = 5.0f; // Max Speed Down in m/s in Stab/Accro Mode 
-	UPROPERTY() float PilotSpeedUp = 5.0f; // Max Speed Up in m/s in Stab/Accro Mode 
+	UPROPERTY() 
+	float AngleMax = 45.0f; // Max Lean Angle Deg in Stab Mode 
+	
+	UPROPERTY() 
+	float SmoothingGain = 0.5f; // Smoothing Value for StabilizerMode. Must be 0..1 
+	
+	UPROPERTY() 
+	float AccroThrottleMid = 0.5f; // Zero Pos on Throttle for Accro Mode. Must be 0..1 
+	
+	UPROPERTY() 
+	float PilotMaxSpeedDown = 10.0f; // Max Speed Down in m/s in AltHold Mode 
+	
+	UPROPERTY() 
+	float PilotMaxSpeedUp = 7.0f; // Max Speed Up in m/s in AltHold Mode 
+	
+	UPROPERTY() 
+	float PilotSpeedDown = 5.0f; // Max Speed Down in m/s in Stab/Accro Mode 
+	
+	UPROPERTY() 
+	float PilotSpeedUp = 5.0f; // Max Speed Up in m/s in Stab/Accro Mode 
 
-	UPROPERTY() float DesiredVerticalSpeed = 3.0f; // Max Speed Down in m/s in AltHold Mode 
-	UPROPERTY() float PilotZAccel = 1.5f; // Desired Z Accel in Alt Hold Mode in m/s^2 
-	UPROPERTY() float YawPGain = 200.0f; // 1..10 , 4.5 = 200 (deg/s) Max rotation rate of yaw axis 
-	UPROPERTY() float AccroRollPitchPGain = 200.0f; // 1..10 , 4.5 = 200 (deg/s) Max rotation rate of roll/pitch axis 
-	UPROPERTY() float AccroYawExpo = 0.0f; // -0.5..1 Amount of Expo to add to Accro Yaw 0 = disable, 1.0 = very high 
-	UPROPERTY() float AccroRollPitchExpo = 0.0f; // -0.5..1 Amount of Expo to add to Accro Yaw 0 = disable, 1.0 = very high 
-	UPROPERTY() float ThrottleDeadzone = 0.1f; // deadzone in % (0..1) up and % down from center 
+	UPROPERTY() 
+	float DesiredVerticalSpeed = 3.0f; // Max Speed Down in m/s in AltHold Mode 
+	
+	UPROPERTY() 
+	float PilotZAccel = 1.5f; // Desired Z Accel in Alt Hold Mode in m/s^2 
+	
+	UPROPERTY() 
+	float YawPGain = 200.0f; // 1..10 , 4.5 = 200 (deg/s) Max rotation rate of yaw axis 
+	
+	UPROPERTY() 
+	float AccroRollPitchPGain = 200.0f; // 1..10 , 4.5 = 200 (deg/s) Max rotation rate of roll/pitch axis 
+	
+	UPROPERTY() 
+	float AccroYawExpo = 0.0f; // -0.5..1 Amount of Expo to add to Accro Yaw 0 = disable, 1.0 = very high 
+	
+	UPROPERTY() 
+	float AccroRollPitchExpo = 0.0f; // -0.5..1 Amount of Expo to add to Accro Yaw 0 = disable, 1.0 = very high 
+	
+	UPROPERTY() 
+	float ThrottleDeadzone = 0.1f; // deadzone in % (0..1) up and % down from center 
 
 
 	
@@ -201,33 +85,32 @@ struct FFlightController
 
 
 	/*--- INTERFACE DATA ---*/
-	// Copy of Parent Data. Put inside here during Tock 
+	// Copy of Parent Data. Put inside here during Tock or Init
+	UPROPERTY()
 	float DeltaTime;
-	FBodyInstance *bodyInst;
-	USceneComponent *rootComponent;
-	FVector4 *PilotInput;
+	UPROPERTY()
+	FVector4 PilotInput;
+
+	FBodyInstance *BodyInstance;
+	UPrimitiveComponent *PrimitiveComponent;
 	
+	FAHRS *AHRS;
+	FPositionController *PositionController
+	FEngineController *EngineController;
 	
-	
-	/*--- INTERFACE DATA ---*/
-	// Copy of Parent Data. Put inside here during Tock ??
-	// Or shall I leave it like it is: as children of the Flight Controller?
-	// ODO: TODO
-	FEngineController EngineController;
-	FAHRS AHRS;
-
-
-
-
-
 	/*--- INIT FLIGHT MODES ---*/
 
 
-	void Init(FBodyInstance *bodyInstIn, USceneComponent *rootComponentIn)
+	void Init(FBodyInstance *bodyInstanceIn, UPrimitiveComponent *primitiveComponentIn, FAHRS *AHRSIn, FPositionController * PositionControllerIn, FEngineController *EngineControllerIn)
 	{
-		// Need these Vectors to read data from those components
-		bodyInst = bodyInstIn;
-		rootComponent = rootComponentIn;
+		// Set up Interface
+	
+		BodyInstance = bodyInstanceIn;
+		PrimitiveComponent = primtitiveComponentIn;
+		AHRS = AHRSIn;
+		PositionController = PositionControllerIn;
+		EngineController = EngineControllerIn;
+
 
 		// set up the PID Controllers?
 		// ??????
@@ -272,26 +155,26 @@ struct FFlightController
 
 	void InitModeStabilize()
 	{
-		PosControlSetAltTarget(0.0f);
+		PositionController->SetAltTarget(0.0f);
 	}
 
 
 	void InitModeAltHold()
 	{
-		PosControlSetVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
-		PosControlSetAccelZ(PilotZAccel);
+		PositionController->SetVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
+		PositionController->SetAccelZ(PilotZAccel);
 
-		if (!PosControlIsActiveZ())
+		if (!PositionController->IsActiveZ())
 		{
-			PosControlSetAltTargetToCurrentAlt();
-			PosControlSetDesiredVelocityZ(DesiredVerticalSpeed);
+			PositionController->SetAltTargetToCurrentAlt();
+			PositionController->SetDesiredVelocityZ(DesiredVerticalSpeed);
 		}
 	}
 
 
 	void InitModeAccro()
 	{
-		PosControlSetAltTarget(0.0f);
+		PositionController->SetAltTarget(0.0f);
 	}
 
 
@@ -302,8 +185,8 @@ struct FFlightController
 	void Relax()
 	{
 
-		AttitudeTargetQuat = FQuat(FRotator(AHRS.BodyRotation.GetInverse())); // in degs
-		AttitudeTargetAngVel = AHRS.BodyAngularVelocity; // in deg/s
+		AttitudeTargetQuat = FQuat(FRotator(AHRS->BodyRotation->GetInverse())); // in degs
+		AttitudeTargetAngVel = AHRS->BodyAngularVelocity; // in deg/s
 	
 		//AttitudeTargetAngleRate = FRotator(); // ODO: HOW TO SET IT???
 		// ????????
@@ -313,7 +196,7 @@ struct FFlightController
 		// Set reference angular velocity used in angular velocity controller equal
 		// to the input angular velocity and reset the angular velocity integrators.
 		// This zeros the output of the angular velocity controller.
-		RateTargetAngVel = AHRS.BodyAngularVelocity;
+		RateTargetAngVel = AHRS->BodyAngularVelocity;
 
 		// ResetRateControllerITerms
 		RateRollPid.ResetI();
@@ -326,7 +209,7 @@ struct FFlightController
 
 	/*--- Tock Method. Call this from parents Tick() ---*/
 
-	void Tock(float DeltaTimeIn, FVector4 *PilotInputIn)
+	void Tock(float DeltaTimeIn, FVector4 PilotInputIn)
 	{
 
 		DeltaTime = DeltaTimeIn;
@@ -355,9 +238,9 @@ struct FFlightController
 
 	void TockModeDirect()
 	{
-		InputDirectRollPitchYaw(PilotInput->X, PilotInput->Y, PilotInput->Z);
-		float ThrottleScaled = GetPilotDesiredThrottle(PilotInput->W);
-		SetThrottleOut(ThrottleScaled, false);
+		InputDirectRollPitchYaw(PilotInput.X, PilotInput.Y, PilotInput.Z);
+		float ThrottleScaled = GetPilotDesiredThrottle(PilotInput.W);
+		EngineController->SetThrottleOut(ThrottleScaled);
 	}
 
 	void TockModeStabilize()
@@ -367,12 +250,12 @@ struct FFlightController
 		float TargetYawRate;
 		float ThrottleScaled;
 
-		GetPilotDesiredLeanAngles(PilotInput->X, PilotInput->Y, TargetRoll, TargetPitch);
-		TargetYawRate = GetPilotDesiredYawRate(PilotInput->Z);
-		ThrottleScaled = GetPilotDesiredThrottle(PilotInput->W);
+		GetPilotDesiredLeanAngles(PilotInput.X, PilotInput.Y, TargetRoll, TargetPitch);
+		TargetYawRate = GetPilotDesiredYawRate(PilotInput.Z);
+		ThrottleScaled = GetPilotDesiredThrottle(PilotInput.W);
 
 		InputAngleRollPitchRateYaw(TargetRoll, TargetPitch, TargetYawRate);
-		SetThrottleOut(ThrottleScaled, false);
+		EngineController->SetThrottleOut(ThrottleScaled);
 	}
 
 
@@ -381,22 +264,22 @@ struct FFlightController
 
 		float TakeoffClimbRate = 0.0f;
 
-		PosControlSetVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
-		PosControlSetAccelZ(PilotZAccel);
+		PositionController->SetVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
+		PositionController->SetAccelZ(PilotZAccel);
 
 		float TargetRoll;
 		float TargetPitch;
 		float TargetYawRate;
 		float TargetClimbRate;
 
-		GetPilotDesiredLeanAngles(PilotInput->X, PilotInput->Y, TargetRoll, TargetPitch);
-		TargetYawRate = GetPilotDesiredYawRate(PilotInput->Z);
-		TargetClimbRate = GetPilotDesiredClimbRate(PilotInput->W);
+		GetPilotDesiredLeanAngles(PilotInput.X, PilotInput.Y, TargetRoll, TargetPitch);
+		TargetYawRate = GetPilotDesiredYawRate(PilotInput.Z);
+		TargetClimbRate = GetPilotDesiredClimbRate(PilotInput.W);
 		TargetClimbRate = FMath::Clamp<float>(TargetClimbRate, -PilotMaxSpeedDown, PilotMaxSpeedUp);
 
 		InputAngleRollPitchRateYaw(TargetRoll, TargetPitch, TargetYawRate);
-		PosControlSetAltTargetFromClimbRate(TargetClimbRate);
-		PosControlUpdateZController();
+		PositionController->SetAltTargetFromClimbRate(TargetClimbRate);
+		PositionController->UpdateZController();
 
 	}
 
@@ -408,12 +291,12 @@ struct FFlightController
 		float TargetYawRate;
 		float ThrottleScaled;
 
-		GetPilotDesiredAngleRates(PilotInput->X, PilotInput->Y, PilotInput->Z, TargetRollRate, TargetPitchRate, TargetYawRate);
-		//TargetYawRate = GetPilotDesiredYawRate(PilotInput->Z);
-		ThrottleScaled = GetPilotDesiredThrottle(PilotInput->W);
+		GetPilotDesiredAngleRates(PilotInput.X, PilotInput.Y, PilotInput.Z, TargetRollRate, TargetPitchRate, TargetYawRate);
+		//TargetYawRate = GetPilotDesiredYawRate(PilotInput.Z);
+		ThrottleScaled = GetPilotDesiredThrottle(PilotInput.W);
 
 		InputRateBodyRollPitchYaw(TargetRollRate, TargetPitchRate, TargetYawRate);
-		SetThrottleOut(ThrottleScaled, false);
+		EngineController->SetThrottleOut(ThrottleScaled);
 	}
 
 
@@ -525,7 +408,7 @@ struct FFlightController
 	float GetPilotDesiredThrottle(float ThrottleIn, float ThrottleMidIn = 0.0f)
 	{
 		if (ThrottleMidIn <= 0.0f) {
-			ThrottleMidIn = EngineController.GetThrottleHover();
+			ThrottleMidIn = EngineController->GetThrottleHover();
 		}
 
 		float MidStick = GetThrottleMid();
@@ -685,6 +568,8 @@ struct FFlightController
     // Calculates the body frame angular velocities to follow the target attitude
     void RunQuat()
     {
+
+		FQuat AttitudeVehicleQuat = AHRS->GetAttitude();
         
         /*
         // Retrieve quaternion vehicle attitude
@@ -735,6 +620,37 @@ struct FFlightController
 
 
 
+	// Thrust and Rotation changes are calculated as two different rotations. 
+	// First one rotates thrust (body Z) 
+	// second one rotates Heading AFTER thrust rotation occured 
+	void ThrustHeadingAndRotationAngles(FQuat &AttToQuat, FQuat &AttFromQuat, FVector &AttErrorAngles, float &AttErrorDot) 
+	{ 
+        // assumption: AttFromQuat and AttToQuat are in World AND Body Space, because they refer to a root object. 
+        // This means: We do not need a body to world transform here 
+        
+        // Get From and To Thrust Vectors 
+        FVector AttToThrustVector = AttToQuat.GetUpVector(); 
+        FVector AttFromThrustVector = AttFromQuat.GetUpVector(); 
+        
+        // Find the Axis and Angle between those Thrust Vectors 
+        FQuat ThrustVectorCorrectionQuat = FQuat::FindBetween(AttFromThrustVector, AttToThrustVector); 
+        float ThrustCorrectionAngle = 0.0f; 
+        FVector ThrustCorrectionAxis; 
+        ThrustVectorCorrectionQuat.ToAxisAndAngle(ThrustCorrectionAxis, ThrustCorrectionAngle); 
+        ThrustCorrectionAngle = FMath::RadiansToDegrees(ThrustCorrectionAngle); 
+        
+        // Apply Correction based on the initial rotation done by AttFromQuat 
+        // ODO: I think we do not need this! 
+        ThrustVectorCorrectionQuat = AttFromQuat.Inverse() * ThrustVectorCorrectionQuat * AttFromQuat; 
+        
+        // Calculate the remaining rotation required to correct the heading after thrust vector is rotated 
+        // Means: Rotate around Z in a way that X (FORWARD) points to the requested X (FORWARD) direction 
+        FQuat HeadingQuat = ThrustVectorCorrectionQuat * AttFromQuat.Inverse() * AttToQuat; 
+        
+	}
+
+
+
 
 
 
@@ -750,74 +666,15 @@ struct FFlightController
 		return 0.5;
 	}
 
-	float SetThrottleOut(float ThrottleIn, bool ResetAttitudeController = true)
+
+
+	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)
 	{
-		// ODO:TODO
-		return 1.0;
+	//	GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Engines %%  : 1=%f 2=%f 3=%f 4=%f"), GetEnginePercent(0), GetEnginePercent(1), GetEnginePercent(2), GetEnginePercent(3)), true, DebugFontSizeIn);
 		
 	}
 
-	
-	float GetThrottleHover()
-	{
-		
-		// motors->get_throttle_hover(); 
-		// ????????????????????????? 
-		// Maybe this is from Engine Control???
-		return 0.5;
-	}
 
-
-
-
-	/* --- POS CONTROLLER --- */
-
-
-	void PosControlSetAltTarget(float AltIn)
-	{
-		//pos_control->set_alt_Target(f) 
-	}
-
-
-	void PosControlSetVelocityZ(float SpeedDownIn, float SpeedUpIn)
-	{
-		//sets maximum climb and descent rates 
-		//pos_control->set_speed_z 
-	}
-
-	void PosControlSetAccelZ(float AccelIn)
-	{
-		//sets maximum climb and descent acceleration 
-		//pos_control->set_accel_z 
-	}
-
-	bool PosControlIsActiveZ()
-	{
-		// pos_control->is_active_z() 
-		return true;
-	}
-
-	void PosControlSetAltTargetToCurrentAlt()
-	{
-		//pos_control->set_alt_target_to_current_alt(); 
-	}
-
-	void PosControlSetDesiredVelocityZ(float VelocityIn)
-	{
-		//sets Desired climb/descent rate 
-		//pos_control->set_desired_velocity_z 
-	}
-
-	void PosControlSetAltTargetFromClimbRate(float TargetClimbRate)
-	{
-		//set_alt_target_from_climb_rate_ff 
-	}
-
-
-	void PosControlUpdateZController()
-	{
-		//pos_control->update_z_controller(); 
-	}
 
 
 };

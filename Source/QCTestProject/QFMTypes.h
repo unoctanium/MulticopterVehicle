@@ -2,8 +2,10 @@
 
 #include "CoreMinimal.h"
 
+
 #include "QFMTypes.generated.h"
 
+typedef unsigned char 		uint8;		// 8-bit  unsigned.
 
 /*--- Structure to hold our supported Flight Modes ---*/
 UENUM(BlueprintType)                 
@@ -14,7 +16,6 @@ enum class EFlightMode : uint8
 	FM_AltHold		UMETA(DisplayName = "Stabilize Mode with Alt Hold"),
 	FM_Accro		UMETA(DisplayName = "Accro Mode")
 };
-
 
 
 // Enumeration of supported Frame Types

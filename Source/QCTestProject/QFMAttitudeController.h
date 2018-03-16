@@ -10,10 +10,10 @@
 #include "QFMTypes.h"
 #include "QFMPIDController.h"
 
-
+#include "QFMInputController.h"
+#include "QFMAHRS.h"
 #include "QFMPositionController.h"
 #include "QFMEngineController.h"
-#include "QFMAHRS.h"
 
 #include "QFMAttitudeController.generated.h"
 
@@ -73,16 +73,45 @@ struct FAttitudeController
 	UPROPERTY() 
 	float ThrottleDeadzone = 0.1f; // deadzone in % (0..1) up and % down from center 
 
+	UPROPERTY()
+	float RateRollP = 0.15f;
+
+	UPROPERTY()
+	float RateRollI = 0.1f;
+	
+	UPROPERTY()
+	float RateRollD = 0.004f;
+	
+	UPROPERTY()
+	float RatePitchP = 0.15f;
+
+	UPROPERTY()
+	float RatePitchI = 0.1f;
+
+	UPROPERTY()
+	float RatePitchD = 0.004f;
+
+	UPROPERTY()
+	float RateYawP = 0.02f;
+
+	UPROPERTY()
+	float RateYawI = 0.02f;
+
+	UPROPERTY()
+	float RateYawD = 0.0f;
+
+
 
 	
 	/*--- PRIVATE ---*/
 
 	// Targets
 	UPROPERTY() FQuat AttitudeTargetQuat;
-	UPROPERTY() FRotator AttitudeTargetRotator;
 	UPROPERTY() FVector AttitudeTargetAngVel;
+
+	//UPROPERTY() FRotator AttitudeTargetRotator;
 	//UPROPERTY() FRotator AttitudeTargetAngleRate; // Do I need it?
-	UPROPERTY() FVector RateTargetAngVel;
+	//UPROPERTY() FVector RateTargetAngVel;
 
 	// PIDs
 	UPROPERTY() FPIDController RateRollPid;
@@ -103,29 +132,44 @@ struct FAttitudeController
 	FAHRS *AHRS;
 	FPositionController *PositionController;
 	FEngineController *EngineController;
+	FInputController *InputController;
 	
 	/*--- INIT FLIGHT MODES ---*/
 
 
-	void Init(FBodyInstance *BodyInstanceIn, UPrimitiveComponent *PrimitiveComponentIn, FAHRS *AHRSIn, FPositionController * PositionControllerIn, FEngineController *EngineControllerIn)
+	void Init(FBodyInstance *BodyInstanceIn, UPrimitiveComponent *PrimitiveComponentIn, FInputController *InputControllerIn, FAHRS *AHRSIn, FPositionController *PositionControllerIn, FEngineController *EngineControllerIn)
 	{
 		// Set up Interface
 	
 		BodyInstance = BodyInstanceIn;
 		PrimitiveComponent = PrimitiveComponentIn;
+		InputController = InputControllerIn;
 		AHRS = AHRSIn;
 		PositionController = PositionControllerIn;
 		EngineController = EngineControllerIn;
 
+		// Init Pids
+		RateRollPid.Init(-1.0f, 1.0f, RateRollP, RateRollI, RateRollD);
+		RatePitchPid.Init(-1.0f, 1.0f, RatePitchP, RatePitchI, RatePitchD);
+		RateYawPid.Init(-1.0f, 1.0f, RateYawP, RateYawI, RateYawD);
 
-		// set up the PID Controllers?
-		// ??????
+		Reset();
 
-		// Reset PID parameters etc
-		Relax();
-		
 		// we start in Stabilize mode
 		SelectFlightMode(EFlightMode::FM_Stabilize);
+	}
+
+
+	void Reset()
+	{
+		// Reset Quats
+		AttitudeTargetQuat = AHRS->GetWorldRotationQuat(); //		FQuat(FRotator(AHRS->BodyRotation.GetInverse())); // in degs
+		AttitudeTargetAngVel = AHRS->GetBodyAngularVelocityVect(); // in deg/s
+	
+		// ResetPids
+		RateRollPid.Reset();
+		RatePitchPid.Reset();
+		RateYawPid.Reset();
 	}
 
 
@@ -135,9 +179,6 @@ struct FAttitudeController
 
 		switch (FlightMode)
 		{
-		case EFlightMode::FM_Direct:
-			InitModeDirect();
-				break;
 		case EFlightMode::FM_Stabilize:
 			InitModeStabilize();
 				break;
@@ -153,11 +194,6 @@ struct FAttitudeController
 	}
 
 
-	void InitModeDirect()
-	{
-		// Nothing to do 
-	}
-
 
 	void InitModeStabilize()
 	{
@@ -167,8 +203,8 @@ struct FAttitudeController
 
 	void InitModeAltHold()
 	{
-		PositionController->SetVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
-		PositionController->SetAccelZ(PilotZAccel);
+		PositionController->SetMaxVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
+		PositionController->SetMaxAccelerationZ(PilotZAccel);
 
 		if (!PositionController->IsActiveZ())
 		{
@@ -184,48 +220,15 @@ struct FAttitudeController
 	}
 
 
-
-	/*--- Reset ---*/
-
-	// Ensure attitude controller have zero errors to relax rate controller output
-	void Relax()
-	{
-
-		AttitudeTargetQuat = FQuat(FRotator(AHRS->BodyRotation.GetInverse())); // in degs
-		AttitudeTargetAngVel = AHRS->BodyAngularVelocity; // in deg/s
-	
-		//AttitudeTargetAngleRate = FRotator(); // ODO: HOW TO SET IT???
-		// ????????
-
-		AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
-
-		// Set reference angular velocity used in angular velocity controller equal
-		// to the input angular velocity and reset the angular velocity integrators.
-		// This zeros the output of the angular velocity controller.
-		RateTargetAngVel = AHRS->BodyAngularVelocity;
-
-		// ResetRateControllerITerms
-		RateRollPid.ResetI();
-		RatePitchPid.ResetI();
-		RateYawPid.ResetI();
-
-	}
-
-
-
 	/*--- Tock Method. Call this from parents Tick() ---*/
 
-	void Tock(float DeltaTimeIn, FVector4 PilotInputIn)
+	void Tock(float DeltaTimeIn)
 	{
-
 		DeltaTime = DeltaTimeIn;
-		PilotInput = PilotInputIn;
+		PilotInput = InputController->GetDesiredInput();
 
 		switch (FlightMode)
 		{
-		case EFlightMode::FM_Direct:
-			TockModeDirect();
-				break;
 		case EFlightMode::FM_Stabilize:
 			TockModeStabilize();
 				break;
@@ -238,16 +241,8 @@ struct FAttitudeController
 		default:
 			break;
 		}
-
 	}
 
-
-	void TockModeDirect()
-	{
-		InputDirectRollPitchYaw(PilotInput.X, PilotInput.Y, PilotInput.Z);
-		float ThrottleScaled = GetPilotDesiredThrottle(PilotInput.W);
-		EngineController->SetThrottleOut(ThrottleScaled);
-	}
 
 	void TockModeStabilize()
 	{
@@ -270,8 +265,8 @@ struct FAttitudeController
 
 		float TakeoffClimbRate = 0.0f;
 
-		PositionController->SetVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
-		PositionController->SetAccelZ(PilotZAccel);
+		PositionController->SetMaxVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
+		PositionController->SetMaxAccelerationZ(PilotZAccel);
 
 		float TargetRoll;
 		float TargetPitch;
@@ -409,24 +404,17 @@ struct FAttitudeController
 
 	// GetPilotDesiredThrottle transform pilot's manual throttle input to make hover throttle mid stick 
 	// used only for manual throttle modes 
-	// ThrottleMidIn should be in the range 0 to 1 
 	// returns throttle output 0 to 1 
-	float GetPilotDesiredThrottle(float ThrottleIn, float ThrottleMidIn = 0.0f)
+	float GetPilotDesiredThrottle(float ThrottleIn)
 	{
-		if (ThrottleMidIn <= 0.0f) {
-			ThrottleMidIn = EngineController->GetThrottleHover();
-		}
-
-		float MidStick = GetThrottleMid();
-		// protect against unlikely divide by zero 
-		if (MidStick <= 0) {
-			MidStick = 0.0f;
-		}
+		
+		float MidStick = InputController->GetThrottleMidStick();
+		float ThrottleMidIn = EngineController->GetThrottleHover();
 
 		// ensure reasonable throttle values 
 		ThrottleIn = FMath::Clamp<float>(ThrottleIn, 0.0f, 1.0f);
 
-		// calculate normalised throttle input 
+		// calculate normalised throttle input 0..1 and mid = 0.5
 		if (ThrottleIn < MidStick) {
 			// below the deadband 
 			ThrottleIn = ThrottleIn * 0.5f / MidStick;
@@ -441,9 +429,9 @@ struct FAttitudeController
 		}
 
 		// Expo 
-		float Expo = FMath::Clamp<float>(-(ThrottleMidIn - 0.5) / 0.375, -0.5f, 1.0f); // ODO: DAS geht besser 
-																					   // calculate the output throttle using the given expo function 
+		float Expo = FMath::Clamp<float>(-(ThrottleMidIn - 0.5) / 0.375, -0.5f, 1.0f); // calculate the output throttle using the given expo function 
 		float ThrottleOut = ThrottleIn * (1.0f - Expo) + Expo * ThrottleIn*ThrottleIn*ThrottleIn;
+		
 		return ThrottleOut;
 	}
 
@@ -453,17 +441,18 @@ struct FAttitudeController
 	// without any deadzone at the bottom 
 	float GetPilotDesiredClimbRate(float ThrottleIn)
 	{
-		float DesiredRate = 0.0f;
-		float MidStick = GetThrottleMid();
+		float DesiredRate;
+
+		float MidStick = InputController->GetThrottleMidStick();
+
+		// ensure a reasonable deadzone 
+		ThrottleDeadzone = FMath::Clamp<float>(ThrottleDeadzone, 0.0f, 0.4f);
 
 		float DeadbandTop = MidStick + ThrottleDeadzone;
 		float DeadbandBottom = MidStick - ThrottleDeadzone;
 
 		// ensure a reasonable throttle value 
 		ThrottleIn = FMath::Clamp<float>(ThrottleIn, 0.0f, 1.0f);
-
-		// ensure a reasonable deadzone 
-		ThrottleDeadzone = FMath::Clamp<float>(ThrottleDeadzone, 0.0f, 0.4f);
 
 		// check throttle is above, below or in the deadband 
 		if (ThrottleIn < DeadbandBottom) {
@@ -489,10 +478,11 @@ struct FAttitudeController
 	/*--- INPUT FUNCTIONS: INPUT DATA INTO FLIGHT CONTROLLER ---*/
 
 
-	// Command an angular roll, pitch and rate yaw with angular velocity feedforward and smoothing 
+	// Command an angular roll, pitch and rate yaw with angular velocity feedforward 
 	void InputAngleRollPitchRateYaw(float RollIn, float PitchIn, float YawRateIn)
 	{
 
+		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
 		AttitudeTargetRotator.Roll = RollIn;
 		AttitudeTargetRotator.Pitch = PitchIn;
 		AttitudeTargetRotator.Yaw += YawRateIn * DeltaTime;
@@ -503,23 +493,19 @@ struct FAttitudeController
 
 		// Set rate feedforward requests to zero 
 		AttitudeTargetAngVel = FVector(0.0f, 0.0f, 0.0f);
-		//AttitudeTargetAngRates = FRotator(0.0f, 0.0f, 0.0f);
 
 		// Call quaternion attitude controller
 		RunQuat();
-
 	}
 	
 
 	void InputRateBodyRollPitchYaw(float RollRateIn, float PitchRateIn, float YawRateIn)
 	{
 
-		FQuat AttitudeTargetUpdateQuat;
-
 		// calculate the attitude target euler angles 
-		AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
+		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
 
-		FQuat AttituteTargetUpdateQuat;
+		FQuat AttitudeTargetUpdateQuat;
 		FVector fvect = FMath::DegreesToRadians(FVector(RollRateIn * DeltaTime, PitchRateIn * DeltaTime, YawRateIn * DeltaTime));
 		float theta = fvect.Size();
 		if (theta == 0.0f) {
@@ -528,7 +514,7 @@ struct FAttitudeController
 		else
 		{
 			fvect /= theta;
-			AttituteTargetUpdateQuat = FQuat(fvect, theta);
+			AttitudeTargetUpdateQuat = FQuat(fvect, theta);
 		}
 
 		AttitudeTargetQuat = AttitudeTargetQuat * AttitudeTargetUpdateQuat;
@@ -536,142 +522,113 @@ struct FAttitudeController
 
 		// Set rate feedforward requests to zero 
 		AttitudeTargetAngVel = FVector(0.0f, 0.0f, 0.0f);
-		//AttitudeTargetAngRates = FRotator(0.0f, 0.0f, 0.0f);
 
 		// Call quaternion attitude controller
 		RunQuat();
-
 	}
 
-
-	void InputDirectRollPitchYaw(float RollIn, float PitchIn, float YawIn)
-	{
-		// ODO: TODO
-	}
 
 
 
 	/* --- RUN QUAT --- */
 
-    
-    
-    /*
-    void USixDOFMovementComponent::CapsuleRotationUpdate(float DeltaTime, const FVector& TargetUpVector, bool bInstantRot, float RotationSpeed)
-    {
-        const FVector CapsuleUp = CapsuleComponent->GetUpVector();
-        const FQuat DeltaQuat = FQuat::FindBetween(CapsuleUp, TargetUpVector);
-        const FQuat TargetQuat = DeltaQuat * CapsuleComponent->GetComponentRotation().Quaternion();
-        
-        CurrentCapsuleQuat = bInstantRot ? TargetQuat : FQuat::Slerp(CapsuleComponent->GetComponentQuat(), TargetQuat, DeltaTime * RotationSpeed);
-        
-        FHitResult Hit(1.0f);
-        SafeMoveUpdatedComponent(FVector::ZeroVector, CurrentCapsuleQuat, true, Hit);
-        //    CapsuleComponent->SetWorldRotation(CurrentCapsuleQuat);
-        
-    }
-    */
-    
     // Calculates the body frame angular velocities to follow the target attitude
     void RunQuat()
     {
 
-		FQuat AttitudeVehicleQuat = AHRS->GetAttitudeQuat();
+		// Get current Vehicle Attitude
+		FQuat AttitudeVehicleQuat = AHRS->GetWorldRotationQuat();
         
-        /*
-        // Retrieve quaternion vehicle attitude
-        // TODO add _ahrs.get_quaternion()
-        FQuat AttitudeVehicleQuat;
-        attitude_vehicle_quat.from_rotation_matrix(_ahrs.get_rotation_body_to_ned());
-        
-        // Compute attitude error
-        Vector3f attitude_error_vector;
-        thrust_heading_rotation_angles(_attitude_target_quat, attitude_vehicle_quat, attitude_error_vector, _thrust_error_angle);
-        
-        // Compute the angular velocity target from the attitude error
-        _rate_target_ang_vel = update_ang_vel_target_from_att_error(attitude_error_vector);
-        
-        // Add feedforward term that attempts to ensure that roll and pitch errors rotate with the body frame rather than the reference frame.
-        _rate_target_ang_vel.x += attitude_error_vector.y * _ahrs.get_gyro().z;
-        _rate_target_ang_vel.y += -attitude_error_vector.x * _ahrs.get_gyro().z;
-        
-        // Add the angular velocity feedforward, rotated into vehicle frame
-        Quaternion attitude_target_ang_vel_quat = Quaternion(0.0f, _attitude_target_ang_vel.x, _attitude_target_ang_vel.y, _attitude_target_ang_vel.z);
-        Quaternion attitude_error_quat = attitude_vehicle_quat.inverse() * _attitude_target_quat;
-        Quaternion target_ang_vel_quat = attitude_error_quat.inverse()*attitude_target_ang_vel_quat*attitude_error_quat;
-        
-        // Correct the thrust vector and smoothly add feedforward and yaw input
-        if(_thrust_error_angle > AC_ATTITUDE_THRUST_ERROR_ANGLE*2.0f){
-            _rate_target_ang_vel.z = _ahrs.get_gyro().z;
-        }else if(_thrust_error_angle > AC_ATTITUDE_THRUST_ERROR_ANGLE){
-            float flip_scalar = (1.0f - (_thrust_error_angle-AC_ATTITUDE_THRUST_ERROR_ANGLE)/AC_ATTITUDE_THRUST_ERROR_ANGLE);
-            _rate_target_ang_vel.x += target_ang_vel_quat.q2*flip_scalar;
-            _rate_target_ang_vel.y += target_ang_vel_quat.q3*flip_scalar;
-            _rate_target_ang_vel.z += target_ang_vel_quat.q4;
-            _rate_target_ang_vel.z = _ahrs.get_gyro().z*(1.0-flip_scalar) + _rate_target_ang_vel.z*flip_scalar;
-        } else {
-            _rate_target_ang_vel.x += target_ang_vel_quat.q2;
-            _rate_target_ang_vel.y += target_ang_vel_quat.q3;
-            _rate_target_ang_vel.z += target_ang_vel_quat.q4;
-        }
-        
-        if (_rate_bf_ff_enabled & _use_ff_and_input_shaping) {
-            // rotate target and normalize
-            Quaternion attitude_target_update_quat;
-            attitude_target_update_quat.from_axis_angle(Vector3f(_attitude_target_ang_vel.x * _dt, _attitude_target_ang_vel.y * _dt, _attitude_target_ang_vel.z * _dt));
-            _attitude_target_quat = _attitude_target_quat * attitude_target_update_quat;
-            _attitude_target_quat.normalize();
-        }
-         */
-    }
-
-
-
-	// Thrust and Rotation changes are calculated as two different rotations. 
-	// First one rotates thrust (body Z) 
-	// second one rotates Heading AFTER thrust rotation occured 
-	void ThrustHeadingAndRotationAngles(FQuat &AttToQuat, FQuat &AttFromQuat, FVector &AttErrorAngles, float &AttErrorDot) 
-	{ 
-        // assumption: AttFromQuat and AttToQuat are in World AND Body Space, because they refer to a root object. 
-        // This means: We do not need a body to world transform here 
-        
-        // Get From and To Thrust Vectors 
-        FVector AttToThrustVector = AttToQuat.GetUpVector(); 
-        FVector AttFromThrustVector = AttFromQuat.GetUpVector(); 
+	    // Get From and To Thrust Vectors 
+        FVector AttToThrustVector = AttitudeTargetQuat.GetUpVector(); 
+        FVector AttFromThrustVector = AttitudeVehicleQuat.GetUpVector(); 
         
         // Find the Axis and Angle between those Thrust Vectors 
         FQuat ThrustVectorCorrectionQuat = FQuat::FindBetween(AttFromThrustVector, AttToThrustVector); 
-        float ThrustCorrectionAngle = 0.0f; 
-        FVector ThrustCorrectionAxis; 
-        ThrustVectorCorrectionQuat.ToAxisAndAngle(ThrustCorrectionAxis, ThrustCorrectionAngle); 
-        ThrustCorrectionAngle = FMath::RadiansToDegrees(ThrustCorrectionAngle); 
         
-        // Apply Correction based on the initial rotation done by AttFromQuat 
+	    // Apply Correction based on the initial rotation done by AttFromQuat 
         // ODO: I think we do not need this! 
-        ThrustVectorCorrectionQuat = AttFromQuat.Inverse() * ThrustVectorCorrectionQuat * AttFromQuat; 
+        ThrustVectorCorrectionQuat = AttitudeVehicleQuat.Inverse() * ThrustVectorCorrectionQuat * AttitudeVehicleQuat; 
         
         // Calculate the remaining rotation required to correct the heading after thrust vector is rotated 
         // Means: Rotate around Z in a way that X (FORWARD) points to the requested X (FORWARD) direction 
-        FQuat HeadingQuat = ThrustVectorCorrectionQuat * AttFromQuat.Inverse() * AttToQuat; 
-        
-	}
+        FQuat HeadingQuat = ThrustVectorCorrectionQuat * AttitudeVehicleQuat.Inverse() * AttitudeTargetQuat; 
+
+		// Calculate the angular distance between current vehicle attitude and target attitude
+		float AngularSpeed = FMath::RadiansToDegrees(AttitudeVehicleQuat.AngularDistance(HeadingQuat)) / AccroRollPitchPGain;
+
+		// Slerp from current attitude to target attitude, using AngularDistanveDeg to decide about the speed
+		AttitudeTargetQuat = FQuat::Slerp(HeadingQuat, AttitudeTargetQuat, DeltaTime * AngularSpeed);
+
+		// Get the target angular velocity vector to turn from AttitudeVehicleQuat to AttitudeTargetQuat
+		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
+		AttitudeTargetAngVel = FVector(AttitudeTargetRotator.Roll, AttitudeTargetRotator.Pitch, AttitudeTargetRotator.Yaw);
+
+		//
+		UpdateThrottleRPYMix(); 
+
+		EngineController->SetRoll(RateTargetToMotorRoll(AHRS->GetBodyAngularVelocityVect().X, AttitudeTargetAngVel.X));
+		EngineController->SetPitch(RateTargetToMotorPitch(AHRS->GetBodyAngularVelocityVect().Y, AttitudeTargetAngVel.Y));
+		EngineController->SetYaw(RateTargetToMotorYaw(AHRS->GetBodyAngularVelocityVect().Z, AttitudeTargetAngVel.Z));
+
+    }
+
+
+	// Run the roll angular velocity PID controller and return the output 
+	float RateTargetToMotorRoll(float RateActualDeg, float RateTargetDeg) 
+	{ 
+		float RateActualRads = FMath::DegreesToRadians(RateActualDeg);
+		float RateTargetRads = FMath::DegreesToRadians(RateTargetDeg);
+		return RateRollPid.Calculate(RateTargetRads, RateActualRads, DeltaTime);
+		
+		/*
+		float RateErrorRads = RateTargetRads - RateActualRads; 
+
+		// pass error to PID controller 
+		RateRollPid.SetInputFilterD(RateErrorRads); 
+		RateRollPid.SetDesiredRate(RateTargetRads); 
+
+		float Integrator = RateRollPid.GetIntegrator(); 
+
+		// Ensure that integrator can only be reduced if the output is saturated 
+		if (!EngineController->IsLimitRollPitch() || ((Integrator > 0 && RateErrorRads < 0) || (Integrator < 0 && RateErrorRads > 0))) { 
+			Integrator = RateRollPid.GetI(); 
+		} 
+
+		// Compute output in range -1 ~ +1 
+		float output = RateRollPid.GetP() + Integrator + RateRollPid.GetD() + RateRollPid().GetFF(RateTargetRads); 
+
+		// Constrain output 
+		return FMath::Clamp(output, -1.0f, 1.0f); 
+		*/
+	} 
+
+
+	// Run the pitch angular velocity PID controller and return the output 
+	float RateTargetToMotorPitch(float RateActualDeg, float RateTargetDeg) 
+	{ 
+		float RateActualRads = FMath::DegreesToRadians(RateActualDeg);
+		float RateTargetRads = FMath::DegreesToRadians(RateTargetDeg);
+
+		return RatePitchPid.Calculate(RateTargetRads, RateActualRads, DeltaTime);
+	} 
+
+
+		// Run the roll angular velocity PID controller and return the output 
+	float RateTargetToMotorYaw(float RateActualDeg, float RateTargetDeg) 
+	{ 
+		float RateActualRads = FMath::DegreesToRadians(RateActualDeg);
+		float RateTargetRads = FMath::DegreesToRadians(RateTargetDeg);
+
+		return RateYawPid.Calculate(RateTargetRads, RateActualRads, DeltaTime);
+	} 
 
 
 
-
-
-
-	/*--- THROTTLE FUNCTIONS ---*/
-
-
-	// Helper Function
-	float GetThrottleMid()
+	void UpdateThrottleRPYMix()
 	{
-		//get_throttle_mid() 
-		// ????????????????????????? 
-		// Maybe this is from Engine Control???
-		return 0.5;
-	}
 
+	}
 
 
 	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)
@@ -679,8 +636,6 @@ struct FAttitudeController
 	//	GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Engines %%  : 1=%f 2=%f 3=%f 4=%f"), GetEnginePercent(0), GetEnginePercent(1), GetEnginePercent(2), GetEnginePercent(3)), true, DebugFontSizeIn);
 		
 	}
-
-
 
 
 };

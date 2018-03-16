@@ -117,7 +117,6 @@ struct FEngineController
 		// Mix Pilot Input to meet Frame Mode 
 		MixEngines(DesiredPilotInput, FrameMode);
 	
-
 		// Apply Engine RPM ... Now: Only Mixed but no Attitude Controller
 		SetEnginesFromMixer();
 
@@ -294,6 +293,7 @@ struct FEngineController
 
 	// Return Hover Throttle in range 0..1
 	// ODO: This comes from calculation ??? or a parameter ???
+	// MUST!! be in ]0..1]
 	float GetThrottleHover()
 	{
 		return 0.5;
@@ -307,6 +307,33 @@ struct FEngineController
 
 		return 1.0;
 		
+	}
+
+
+	// Set Roll -1..1
+	void SetRoll(float ValueIn)
+	{
+
+	}
+
+
+	// Set Pitch -1..1
+	void SetPitch(float ValueIn)
+	{
+		
+	}
+
+
+	// Set Yaw -1..1
+	void SetYaw(float ValueIn)
+	{
+		
+	}
+
+
+	bool IsLimitRollPitch()
+	{
+		return false;
 	}
 
 

@@ -25,9 +25,16 @@ struct FAHRS
 
 	// ODO: Need these for FlightController
 	// Overthink old values above...
-    UPROPERTY() FVector WorldPosition;
+    
     UPROPERTY() FRotator BodyRotation; // NOT!! World Rotation
-	UPROPERTY() FVector BodyAngularVelocity;
+	
+
+
+// NEW
+
+	UPROPERTY() FQuat WorldRotationQuat; 
+	UPROPERTY() FVector WorldTranslationVect;
+	UPROPERTY() FVector BodyAngularVelocityVect;
     
 
 
@@ -56,14 +63,39 @@ struct FAHRS
 		AngularVelocity = FMath::RadiansToDegrees(BodyInstance->GetUnrealWorldAngularVelocityInRadians());
 		LinearAcceleration = (OldLinearVelocity - LinearVelocity) / DeltaTime;
 		AngularAcceleration = (OldAngularVelocity - AngularVelocity) / DeltaTime;
+
+	///NEW
+		WorldRotationQuat = bodyTransform.GetRotation(); // in deg?
+		WorldTranslationVect = bodyTransform.GetTranslation() / 100.0f; // in m	
+		BodyAngularVelocityVect = FMath::RadiansToDegrees(BodyInstance->GetUnrealWorldAngularVelocityInRadians()); // in deg/s
 	}
 
 
-	FQuat GetAttitudeQuat()
+	FQuat GetWorldRotationQuat()
 	{
-		return Rotation.Quaternion();
+		return WorldRotationQuat;
 	}
 
+	FVector GetWorldTranslationVect()
+	{
+		return WorldTranslationVect;
+	}
+
+	FVector GetBodyAngularVelocityVect()
+	{
+		return BodyAngularVelocityVect;
+	}
+
+	float GetWorldAltitude()
+	{
+		return WorldTranslationVect.Z;
+	}
+
+
+
+
+
+/*
 
 	FRotator GetRotationDeg()
 	{
@@ -96,6 +128,7 @@ struct FAHRS
 		return FMath::DegreesToRadians<FVector>(AngularAcceleration);
 	}
 
+*/
 
 	void Debug(FColor Color, FVector2D DebugFontSize)
 	{

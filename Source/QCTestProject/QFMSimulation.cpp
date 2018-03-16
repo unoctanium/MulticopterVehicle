@@ -15,7 +15,7 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
 	AHRS.Tock(DeltaTime);
 
 	// Call Flight Controller to calculate angine outputs based on actual attitude and pilot input
-	AttitudeController.Tock(DeltaTime, PilotInput.GetDesiredInput());
+	AttitudeController.Tock(DeltaTime);
 
 	// update Position Controller
 	PositionController.Tock(DeltaTime);

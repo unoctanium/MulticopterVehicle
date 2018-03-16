@@ -77,6 +77,8 @@ struct FInputController
 		);
 		
 		DesiredPilotInput = NewInputStick;
+
+		// Normalize Throttle input to [0..1]
 		DesiredPilotInput.W = DesiredPilotInput.W / 2.0f + 0.5f; 
 	}
 
@@ -87,6 +89,11 @@ struct FInputController
 		return DesiredPilotInput;
 	}
 
+
+	float GetThrottleMidStick()
+	{
+		return (2.0f + ThrottleAxisInputInterval.X / (ThrottleAxisInputInterval.Y - ThrottleAxisInput));
+	}
 
 	// Helper Function to Map Pilot Input to [-1..1]
 	float GetMappedAndClampedValueNormal(const FVector2D& InputRange, const float Value)

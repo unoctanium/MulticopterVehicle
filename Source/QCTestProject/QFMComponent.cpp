@@ -88,8 +88,8 @@ void UQuadcopterFlightModel::BeginPlay()
 	// Init all our Subsystems
 	PilotInput.Init(BodyInstance, Parent);
 	AHRS.Init(BodyInstance, Parent);
-	AttitudeController.Init(BodyInstance, Parent, &AHRS, &PositionController, &EngineController);
-	PositionController.Init(BodyInstance, Parent);
+	AttitudeController.Init(BodyInstance, Parent, &PilotInput, &AHRS, &PositionController, &EngineController);
+	PositionController.Init(BodyInstance, Parent, &AHRS);
 	EngineController.Init(BodyInstance, Parent);
 
 

@@ -3,14 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
 
+#include "UObject/ConstructorHelpers.h"
+#include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
-
-#include "UObject/ConstructorHelpers.h"
+#include "Components/InputComponent.h"
+#include "Classes/InputCoreTypes.h"
+#include <EngineGlobals.h>
+#include <Runtime/Engine/Classes/Engine/Engine.h>
 
 #include "HeadMountedDisplay.h"
 #include "IXRTrackingSystem.h"
@@ -136,7 +141,7 @@ private:
 		bool usePawnControlRotation);
 
 	// Helps us cycle among cameras
-	uint8_t ActiveCameraIndex; // 0 = Follow, 1 = Chase, 2 = FPV
+	unsigned char ActiveCameraIndex; // 0 = Follow, 1 = Chase, 2 = FPV
 	void CycleCamera(void);
 	void SwitchCamera(int index);
 	void SwitchCamera1();

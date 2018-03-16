@@ -124,7 +124,7 @@ void AQCPawn::Tick(float DeltaTime)
 // Called to bind functionality to input
 void AQCPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	APawn::SetupPlayerInputComponent(PlayerInputComponent);
 
 	// Pawn Movement
 	PlayerInputComponent->BindAxis("Roll", this, &AQCPawn::InputRoll);

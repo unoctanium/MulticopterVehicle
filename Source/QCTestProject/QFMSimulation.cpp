@@ -61,7 +61,7 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
 			
 			//Debug.Debug(Debug.Color, Debug.FontSize);
 
-			GEngine->AddOnScreenDebugMessage(-1, 0, Debug.Color, TEXT("Phyics Object") + Parent->GetName(), true, Debug.FontSize);
+			//GEngine->AddOnScreenDebugMessage(-1, 0, Debug.Color, TEXT("Phyics Object") + Parent->GetName(), true, Debug.FontSize);
 
         }
     #endif

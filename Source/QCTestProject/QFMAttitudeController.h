@@ -452,8 +452,6 @@ struct FAttitudeController
 		float Expo = FMath::Clamp<float>(-(ThrottleMidIn - 0.5) / 0.375, -0.5f, 1.0f); // calculate the output throttle using the given expo function 
 		float ThrottleOut = ThrottleIn * (1.0f - Expo) + Expo * ThrottleIn*ThrottleIn*ThrottleIn;
 		
-		UE_LOG(LogTemp, Error, TEXT("Throttle: %f %f %f %f"), ThrottleIn, ThrottleOut, ThrottleMidIn, MidStick);
-
 		return ThrottleOut;
 	}
 

@@ -38,7 +38,7 @@ struct FInputController
 
 
 	// Desired Input
-	UPROPERTY() 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterPilotInput|AxisInput", meta = (ToolTip = "Resulting Desired PilotInput")) 
 	FVector4 DesiredPilotInput = FVector4(0.0f, 0.0f, 0.0f, 0.0f);
 	
 
@@ -111,9 +111,7 @@ struct FInputController
 	
 	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, TEXT("Pilot Input: (R,P,Y,T) ") + DesiredPilotInput.ToString(), true, DebugFontSizeIn);
-		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Pilot Input: R=%f P=%f Y=%f T=%f"), DesiredPilotInput.X, DesiredPilotInput.Y, DesiredPilotInput.Z, DesiredPilotInput.W), true, DebugFontSizeIn);
-		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Raw Axis Input: R=%f P=%f Y=%f T=%f"), RollAxisInput, PitchAxisInput, YawAxisInput, ThrottleAxisInput), true, DebugFontSizeIn);		
+		//GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, TEXT("Pilot Input: (R,P,Y,T) ") + DesiredPilotInput.ToString(), true, DebugFontSizeIn);		
 	}
 
 

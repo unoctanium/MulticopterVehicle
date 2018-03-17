@@ -60,11 +60,6 @@ struct FPositionController
 
 
 	
-	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)
-	{
-		// Down to up on the debug screen
-		
-	}
 
 
 	/* --- POS CONTROLLER --- */
@@ -127,6 +122,14 @@ struct FPositionController
 		//pos_control->update_z_controller(); 
 
 	}
+
+
+	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)
+	{
+		// Down to up on the debug screen
+		
+	}
+
 
 
 };

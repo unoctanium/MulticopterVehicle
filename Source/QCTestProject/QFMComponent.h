@@ -60,7 +60,7 @@ public:
 	FAHRS AHRS;
 	
 	/*--- FLIGHT CONTROLLER ---*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Flight Controller")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Attitude Controller")) 
 	FAttitudeController AttitudeController;
 
 	/*--- POSITION CONTROLLER ---*/
@@ -81,34 +81,34 @@ public:
     
 
 	// For UQuadcopterFlightModelVehicle
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle", meta = (ToolTip = "Frame Mode")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle", meta = (ToolTip = "Frame Mode")) 
 	EFrameMode FrameMode = EFrameMode::FrameModeCross;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle|CalculateSetting", meta = (ToolTip = "Calculate bodies mass and inertia")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|CalculateSetting", meta = (ToolTip = "Calculate bodies mass and inertia")) 
 	bool CalculateMassProperties = false;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle|CalculateSetting", meta = (ToolTip = "Central mass (kg)")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|CalculateSetting", meta = (ToolTip = "Central mass (kg)")) 
 	float CentralMass = 10.0f;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle|CalculateSetting", meta = (ToolTip = "Central mass radius (m)")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|CalculateSetting", meta = (ToolTip = "Central mass radius (m)")) 
 	float CentralRadius = 0.25f;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle|CalculateSetting", meta = (ToolTip = "Motor mass (kg), one of 4 motors")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|CalculateSetting", meta = (ToolTip = "Motor mass (kg), one of 4 motors")) 
 	float MotorMass = 5.0f;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle|CalculateSetting", meta = (ToolTip = "Arm length of each arm (m)")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|CalculateSetting", meta = (ToolTip = "Arm length of each arm (m)")) 
 	float ArmLength = 0.5f;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle|ManualSetting", meta = (ToolTip = "Manually enter bodies mass and inertia")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|ManualSetting", meta = (ToolTip = "Manually enter bodies mass and inertia")) 
 	bool EnterMassProperties = true;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle|ManualSetting", meta = (ToolTip = "Mass in KG")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|ManualSetting", meta = (ToolTip = "Mass in KG")) 
 	float Mass = 30.0f;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle|ManualSetting", meta = (ToolTip = "Inertia Tensor")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|ManualSetting", meta = (ToolTip = "Inertia Tensor")) 
 	FVector InertiaTensor = FVector(200000.0f, 200000.0f, 400000.0f);
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterVehicle|ManualSetting", meta = (ToolTip = "Center of mass in m")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|ManualSetting", meta = (ToolTip = "Center of mass in m")) 
 	FVector CenterOfMass = FVector(0.0f, 0.0f, 0.0f);
 	
 

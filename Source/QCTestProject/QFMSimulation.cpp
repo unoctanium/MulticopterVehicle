@@ -21,7 +21,7 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
 	PositionController.Tock(DeltaTime);
 
 	// update EngineController
-	EngineController.Tock(DeltaTime, PilotInput.GetDesiredInput(), FrameMode);
+	EngineController.Tock(DeltaTime);
 
 	// And Apply Forces calculated in Engine Control
 	AddLocalForceZ(EngineController.GetTotalThrust());

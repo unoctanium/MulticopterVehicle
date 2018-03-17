@@ -92,7 +92,7 @@ struct FInputController
 
 	float GetThrottleMidStick()
 	{
-		return (2.0f + ThrottleAxisInputInterval.X / (ThrottleAxisInputInterval.Y - ThrottleAxisInput));
+		return 0.5f; //return (ThrottleAxisInputInterval.X + (ThrottleAxisInputInterval.Y - ThrottleAxisInputInterval.X) / 2.0);
 	}
 
 	// Helper Function to Map Pilot Input to [-1..1]

@@ -12,31 +12,31 @@ struct FQuadcopterFlightModelDebugStruct
 	GENERATED_BODY()
 
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "QuadcopterFlightModel", meta = (ToolTip = "Enable Screen Debug Output")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Enable Screen Debug Output")) 
 	bool DebugScreen = true;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Font Size")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Font Size")) 
 	FVector2D FontSize = FVector2D(1.0f, 1.0f);
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Font Color")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Font Color")) 
 	FColor Color = FColor::White;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display Pilot Input")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display Pilot Input")) 
 	bool PrintInput = true;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display Vehicle Data")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display Vehicle Data")) 
 	bool PrintVehicle = true;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display AHRS")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display AHRS")) 
 	bool PrintAHRS = true;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display AttitudeControl Data")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display AttitudeControl Data")) 
 	bool PrintAttitudeControl = true;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display PositionControl Data")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display PositionControl Data")) 
 	bool PrintPositionControl = true;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display EngineControl Data")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display EngineControl Data")) 
 	bool PrintEngineControl = true;
 	
     

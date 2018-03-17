@@ -90,7 +90,7 @@ void UQuadcopterFlightModel::BeginPlay()
 	AHRS.Init(BodyInstance, Parent);
 	AttitudeController.Init(BodyInstance, Parent, &PilotInput, &AHRS, &PositionController, &EngineController);
 	PositionController.Init(BodyInstance, Parent, &AHRS);
-	EngineController.Init(BodyInstance, Parent);
+	EngineController.Init(BodyInstance, Parent, FrameMode);
 
 
 

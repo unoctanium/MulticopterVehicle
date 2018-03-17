@@ -6,7 +6,7 @@
 #include "Components/SceneComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
 
-
+#include "QFMAHRS.h"
 
 #include "QFMPositionController.generated.h"
 
@@ -26,7 +26,7 @@ struct FPositionController
 	UPROPERTY() float DesiredVelocityZ = 0.0f;
 
 	UPROPERTY() float AltTarget = 0.0f;
-	UPROPERTY() bool IsActiveZ = true;
+	UPROPERTY() bool bIsActiveZ = true;
 	
 
 	/*--- INTERFACE DATA ---*/
@@ -42,14 +42,14 @@ struct FPositionController
 		primitiveComponent = primitiveComponentIn;
 		AHRS = AHRSIn;
 
-		IsActiveZ = true;
+		bIsActiveZ = true;
 
 	}
 
 
 	void Reset()
 	{
-		IsActiveZ = true;
+		bIsActiveZ = true;
 	}
 
 	
@@ -104,7 +104,7 @@ struct FPositionController
 	bool IsActiveZ()
 	{
 		// pos_control->is_active_z() 
-		return IsActiveZ;
+		return bIsActiveZ;
 	}
 
 	void SetAltTargetToCurrentAlt()

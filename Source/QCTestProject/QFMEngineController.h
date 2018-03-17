@@ -10,15 +10,22 @@
 #include "QFMEngineController.generated.h"
 
 
+// Watch: https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_MotorsMatrix.h
+// https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_MotorsMatrix.cpp
+// https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_MotorsMulticopter.h
+// https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_MotorsMulticopter.cpp
+// https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_Motors_Class.h
+// https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_Motors_Class.cpp
+
 USTRUCT()
 struct FQuadcopterFlightModelMixerStruct
 {
 	GENERATED_BODY()
 
-	UPROPERTY() float Throttle;
-	UPROPERTY() float Roll;
-	UPROPERTY() float Pitch;
-	UPROPERTY() float Yaw;
+	UPROPERTY() float Throttle = 0.0f;
+	UPROPERTY() float Roll = 0.0f;
+	UPROPERTY() float Pitch = 0.0f;
+	UPROPERTY() float Yaw = 0.0f;
 
 	// constructor that takes parameters
 	FQuadcopterFlightModelMixerStruct(float InThrottle, float InRoll, float InPitch, float InYaw)
@@ -38,6 +45,20 @@ struct FEngineController
 {
 	GENERATED_BODY()
 
+	UPROPERTY() 
+	float RollRequest; // -1..1
+
+	UPROPERTY() 
+	float PitchRequest; // -1..1
+
+	UPROPERTY() 
+	float YawRequest; // -1..1
+
+	UPROPERTY() 
+	float ThrottleRequest; // 0..1
+
+
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Max RPM")) 
 	float EngineMaxRPM = 1000.0f;
 	
@@ -55,7 +76,14 @@ struct FEngineController
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Length of Arm in m")) 
 	float Engine_L = 2.0f;
-			
+	
+
+
+
+
+
+
+
 	
 	// Mixer
 	UPROPERTY() 
@@ -93,14 +121,16 @@ struct FEngineController
 	float DeltaTime;
 	FBodyInstance *BodyInstance;
 	UPrimitiveComponent *PrimitiveComponent;
+	EFrameMode FrameMode;
 
 
 
 
-	void Init(FBodyInstance *BodyInstanceIn, UPrimitiveComponent *PrimitiveComponentIn)
+	void Init(FBodyInstance *BodyInstanceIn, UPrimitiveComponent *PrimitiveComponentIn, EFrameMode FrameModeIn)
 	{
 		BodyInstance = BodyInstanceIn;
 		PrimitiveComponent = PrimitiveComponentIn;
+		FrameMode = FrameModeIn;
 	}
 
 	
@@ -110,18 +140,18 @@ struct FEngineController
 	}
 
 	
-	void Tock(float DeltaTimeIn, FVector4 DesiredPilotInput, EFrameMode FrameMode)
+	void Tock(float DeltaTimeIn)
 	{
 		DeltaTime = DeltaTimeIn;
 		
 		// Mix Pilot Input to meet Frame Mode 
-		MixEngines(DesiredPilotInput, FrameMode);
+		MixEngines();
 	
 		// Apply Engine RPM ... Now: Only Mixed but no Attitude Controller
 		SetEnginesFromMixer();
 
 		// Calculate new Forces
-		GetEngineForces(FrameMode);
+		GetEngineForces();
 	}
 
 	
@@ -141,7 +171,7 @@ struct FEngineController
 
 
 
-	void GetEngineForces(EFrameMode FrameMode)
+	void GetEngineForces()
 	{
 
 
@@ -301,33 +331,30 @@ struct FEngineController
 
 
 	//float SetThrottleOut(float ThrottleIn, bool ResetAttitudeController = true)
-	float SetThrottleOut(float ThrottleIn)
+	void SetThrottleOut(float ThrottleIn)
 	{
-		// ODO:TODO
-
-		return 1.0;
-		
+		ThrottleRequest = ThrottleIn;
 	}
 
 
 	// Set Roll -1..1
 	void SetRoll(float ValueIn)
 	{
-
+		RollRequest = ValueIn;
 	}
 
 
 	// Set Pitch -1..1
 	void SetPitch(float ValueIn)
 	{
-		
+		PitchRequest = ValueIn;
 	}
 
 
 	// Set Yaw -1..1
 	void SetYaw(float ValueIn)
 	{
-		
+		YawRequest = ValueIn;
 	}
 
 
@@ -367,8 +394,10 @@ struct FEngineController
 
 	/* --- MIXER --- */
 
-	void MixEngines(FVector4 DesiredPilotInput, EFrameMode FrameMode) 
+	void MixEngines() 
 	{
+
+		FVector4 DesiredPilotInput = FVector4(RollRequest, PitchRequest, YawRequest, ThrottleRequest );
 
 		if (FrameMode == EFrameMode::FrameModeCross)
 		{

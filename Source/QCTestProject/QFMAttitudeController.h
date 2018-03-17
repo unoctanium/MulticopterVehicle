@@ -28,76 +28,76 @@ struct FAttitudeController
 
 	/*--- PARAMETERS ---*/
 
-	UPROPERTY() 
-	EFlightMode FlightMode;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FlightMode")) 
+	EFlightMode FlightMode = EFlightMode::FM_Direct;
 
-	UPROPERTY() 
-	float AngleMax = 45.0f; // Max Lean Angle Deg in Stab Mode 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Lean Angle Deg in Stab Mode")) 
+	float AngleMax = 45.0f;  
 	
-	UPROPERTY() 
-	float SmoothingGain = 0.5f; // Smoothing Value for StabilizerMode. Must be 0..1 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Smoothing Value for StabilizerMode. Must be 0..1")) 
+	float SmoothingGain = 0.5f;  
 	
-	UPROPERTY() 
-	float AccroThrottleMid = 0.5f; // Zero Pos on Throttle for Accro Mode. Must be 0..1 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Zero Pos on Throttle for Accro Mode. Must be 0..1")) 
+	float AccroThrottleMid = 0.5f;   
 	
-	UPROPERTY() 
-	float PilotMaxSpeedDown = 10.0f; // Max Speed Down in m/s in AltHold Mode 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Down in m/s in AltHold Mode")) 
+	float PilotMaxSpeedDown = 10.0f;   
 	
-	UPROPERTY() 
-	float PilotMaxSpeedUp = 7.0f; // Max Speed Up in m/s in AltHold Mode 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Up in m/s in AltHold Mode")) 
+	float PilotMaxSpeedUp = 7.0f;   
 	
-	UPROPERTY() 
-	float PilotSpeedDown = 5.0f; // Max Speed Down in m/s in Stab/Accro Mode 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Down in m/s in Stab/Accro Mode")) 
+	float PilotSpeedDown = 5.0f;   
 	
-	UPROPERTY() 
-	float PilotSpeedUp = 5.0f; // Max Speed Up in m/s in Stab/Accro Mode 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Up in m/s in Stab/Accro Mode")) 
+	float PilotSpeedUp = 5.0f;   
 
-	UPROPERTY() 
-	float DesiredVerticalSpeed = 3.0f; // Max Speed Down in m/s in AltHold Mode 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Down in m/s in AltHold Mode")) 
+	float DesiredVerticalSpeed = 3.0f;   
 	
-	UPROPERTY() 
-	float PilotZAccel = 1.5f; // Desired Z Accel in Alt Hold Mode in m/s^2 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Desired Z Accel in Alt Hold Mode in m/s^2")) 
+	float PilotZAccel = 1.5f;   
 	
-	UPROPERTY() 
-	float YawPGain = 200.0f; // 1..10 , 4.5 = 200 (deg/s) Max rotation rate of yaw axis 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "1..10 , 4.5 = 200 (deg/s) Max rotation rate of yaw axis")) 
+	float YawPGain = 200.0f;   
 	
-	UPROPERTY() 
-	float AccroRollPitchPGain = 200.0f; // 1..10 , 4.5 = 200 (deg/s) Max rotation rate of roll/pitch axis 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "1..10 , 4.5 = 200 (deg/s) Max rotation rate of roll/pitch axis")) 
+	float AccroRollPitchPGain = 200.0f;   
 	
-	UPROPERTY() 
-	float AccroYawExpo = 0.0f; // -0.5..1 Amount of Expo to add to Accro Yaw 0 = disable, 1.0 = very high 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "-0.5..1 Amount of Expo to add to Accro Yaw 0 = disable, 1.0 = very high")) 
+	float AccroYawExpo = 0.0f;   
 	
-	UPROPERTY() 
-	float AccroRollPitchExpo = 0.0f; // -0.5..1 Amount of Expo to add to Accro Yaw 0 = disable, 1.0 = very high 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "-0.5..1 Amount of Expo to add to Accro Yaw 0 = disable, 1.0 = very high")) 
+	float AccroRollPitchExpo = 0.0f;  
 	
-	UPROPERTY() 
-	float ThrottleDeadzone = 0.1f; // deadzone in % (0..1) up and % down from center 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "deadzone in % (0..1) up and % down from center")) 
+	float ThrottleDeadzone = 0.1f;   
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID P"))
 	float RateRollP = 0.15f;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID I"))
 	float RateRollI = 0.1f;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID D"))
 	float RateRollD = 0.004f;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID P"))
 	float RatePitchP = 0.15f;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID I"))
 	float RatePitchI = 0.1f;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID D"))
 	float RatePitchD = 0.004f;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID P"))
 	float RateYawP = 0.02f;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID I"))
 	float RateYawI = 0.02f;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID D"))
 	float RateYawD = 0.0f;
 
 
@@ -108,10 +108,6 @@ struct FAttitudeController
 	// Targets
 	UPROPERTY() FQuat AttitudeTargetQuat;
 	UPROPERTY() FVector AttitudeTargetAngVel;
-
-	//UPROPERTY() FRotator AttitudeTargetRotator;
-	//UPROPERTY() FRotator AttitudeTargetAngleRate; // Do I need it?
-	//UPROPERTY() FVector RateTargetAngVel;
 
 	// PIDs
 	UPROPERTY() FPIDController RateRollPid;
@@ -156,7 +152,7 @@ struct FAttitudeController
 		Reset();
 
 		// we start in Stabilize mode
-		SelectFlightMode(EFlightMode::FM_Stabilize);
+		SelectFlightMode(EFlightMode::FM_Direct);
 	}
 
 
@@ -179,6 +175,9 @@ struct FAttitudeController
 
 		switch (FlightMode)
 		{
+		case EFlightMode::FM_Direct:
+			InitModeDirect();
+				break;
 		case EFlightMode::FM_Stabilize:
 			InitModeStabilize();
 				break;
@@ -194,6 +193,11 @@ struct FAttitudeController
 	}
 
 
+
+	void InitModeDirect()
+	{
+		// Nothing to do here
+	}
 
 	void InitModeStabilize()
 	{
@@ -229,6 +233,9 @@ struct FAttitudeController
 
 		switch (FlightMode)
 		{
+		case EFlightMode::FM_Direct:
+			TockModeDirect();
+				break;
 		case EFlightMode::FM_Stabilize:
 			TockModeStabilize();
 				break;
@@ -241,6 +248,19 @@ struct FAttitudeController
 		default:
 			break;
 		}
+	}
+
+
+	void TockModeDirect()
+	{
+		float ThrottleScaled;
+		ThrottleScaled = GetPilotDesiredThrottle(PilotInput.W);
+		EngineController->SetThrottleOut(ThrottleScaled);
+		
+		UpdateThrottleRPYMix(); 
+		EngineController->SetRoll(PilotInput.X);
+		EngineController->SetPitch(PilotInput.Y);
+		EngineController->SetYaw(PilotInput.Z);
 	}
 
 
@@ -432,6 +452,8 @@ struct FAttitudeController
 		float Expo = FMath::Clamp<float>(-(ThrottleMidIn - 0.5) / 0.375, -0.5f, 1.0f); // calculate the output throttle using the given expo function 
 		float ThrottleOut = ThrottleIn * (1.0f - Expo) + Expo * ThrottleIn*ThrottleIn*ThrottleIn;
 		
+		UE_LOG(LogTemp, Error, TEXT("Throttle: %f %f %f %f"), ThrottleIn, ThrottleOut, ThrottleMidIn, MidStick);
+
 		return ThrottleOut;
 	}
 

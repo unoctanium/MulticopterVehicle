@@ -67,7 +67,6 @@ struct FVehicle
 	UPrimitiveComponent *PrimitiveComponent;
 
 
-
 	void Init(FBodyInstance *BodyInstanceIn, UPrimitiveComponent *PrimitiveComponentIn)
 	{
 		BodyInstance = BodyInstanceIn;
@@ -75,11 +74,10 @@ struct FVehicle
 
 
 		// Get Gravity
-		USceneComponent *Parent = Cast<USceneComponent>PrimitiveComponent;
-		Gravity = -  Parent->GetPhysicsVolume()->GetGravityZ() / 100.0f;
+		Gravity = -  PrimitiveComponent->GetPhysicsVolume()->GetGravityZ() / 100.0f;
 
 		// Find My Px Rigid Body
-		PRigidBody = BodyInstance->GetPxRigidBody_AssumesLocked();
+		physx::PxRigidBody* PRigidBody = BodyInstance->GetPxRigidBody_AssumesLocked();
 
 		//	#if WITH_PHYSX
 		//	ScreenMsg("Got into PhysX!!!");
@@ -105,8 +103,8 @@ struct FVehicle
 			BodyInstance->UpdateMassProperties();
 
 			// Set Center Of Mass
-			PRigidBody->SetCenterOfMass(BodyInstance->GetCOMPosition() - BodyInstance->GetCOMPosition());
-			FTransform transform = PRigidBody->GetComponentTransform();
+			PrimitiveComponent->SetCenterOfMass(BodyInstance->GetCOMPosition() - BodyInstance->GetCOMPosition());
+			FTransform transform = PrimitiveComponent->GetComponentTransform();
 			BodyInstance->COMNudge = transform.GetTranslation() - BodyInstance->GetCOMPosition() + CenterOfMass * 100;
 
 			// PhyX Inertia Tensor Override
@@ -117,7 +115,7 @@ struct FVehicle
 		{
 			Mass = BodyInstance->GetBodyMass();
 			InertiaTensor = BodyInstance->GetBodyInertiaTensor();
-			FTransform transform = PRigidBody->GetComponentTransform();
+			FTransform transform = PrimitiveComponent->GetComponentTransform();
 			CenterOfMass = (BodyInstance->GetCOMPosition() - transform.GetTranslation()) / 100.0f; // To set it in m
 		}
 

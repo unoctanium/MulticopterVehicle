@@ -47,7 +47,7 @@ struct FVehicle
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|ManualSetting", meta = (ToolTip = "Mass in KG")) 
 	float Mass = 30.0f;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|ManualSetting", meta = (ToolTip = "Inertia Tensor")) 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|ManualSetting", meta = (ToolTip = "Inertia Tensor in kg * cm^2")) 
 	FVector InertiaTensor = FVector(200000.0f, 200000.0f, 400000.0f);
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|ManualSetting", meta = (ToolTip = "Center of mass in m")) 
@@ -74,7 +74,7 @@ struct FVehicle
 
 
 		// Get Gravity
-		Gravity = -  PrimitiveComponent->GetPhysicsVolume()->GetGravityZ() / 100.0f;
+		Gravity = PrimitiveComponent->GetPhysicsVolume()->GetGravityZ() / 100.0f;
 
 		// Find My Px Rigid Body
 		physx::PxRigidBody* PRigidBody = BodyInstance->GetPxRigidBody_AssumesLocked();

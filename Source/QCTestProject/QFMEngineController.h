@@ -42,6 +42,8 @@ struct FQuadcopterFlightModelMixerStruct
 };
 
 
+
+
 /*--- Implementation of the EngineController ---*/
 USTRUCT(BlueprintType)
 struct FEngineController
@@ -66,13 +68,13 @@ struct FEngineController
 	float EngineMaxRPM = 1000.0f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Thrust Coefficient K")) 
-	float Engine_K = 25000.0f;
+	float Engine_K = 147.0; 
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Thrust Exponent")) 
 	float Engine_Q = 2.0f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Torque Yaw Coefficient")) 
-	float Engine_B = 250000.0f;
+	float Engine_B = 25.0f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Torque Exponent")) 
 	float Engine_QQ = 2.0f;
@@ -220,8 +222,8 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Engine_L * Engine_K;
-				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Engine_L * Engine_K;
+				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Engine_L * Engine_K / 100.0f;
+				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Engine_L * Engine_K / 100.0f;
 				EngineTorque.Z += MixerQuadCross[i].Yaw * SpeedToTorque[i] * Engine_B;
 			}
 
@@ -230,8 +232,8 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Engine_L * Engine_K;
-				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Engine_L * Engine_K;
+				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Engine_L * Engine_K / 100.0f;
+				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Engine_L * Engine_K / 100.0f;
 				EngineTorque.Z += MixerQuadPlus[i].Yaw * SpeedToTorque[i] * Engine_B;
 			}
 
@@ -323,7 +325,11 @@ struct FEngineController
 	// MUST!! be in ]0..1]
 	float GetThrottleHover()
 	{
-		return 0.5;
+		// Assume: 4 Engines!!
+		// ODO: Verallgemeinern
+		float NumEngines = 4;
+		return Math::Pow( (Vehicle->Mass * -Vehicle->Gravity) / (NumEngines * Engine_K) , (1.0f / Engine_Q);     
+		//return 0.5f;
 	}
 
 

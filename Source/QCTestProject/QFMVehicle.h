@@ -35,6 +35,9 @@ struct FVehicle
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|CalculateSetting", meta = (ToolTip = "Central mass radius (m)")) 
 	float CentralRadius = 0.25f;
 	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|CalculateSetting", meta = (ToolTip = "NumberOfEngines")) 
+	float NumberOfEngines = 4.0;
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel|Vehicle|CalculateSetting", meta = (ToolTip = "Motor mass (kg), one of 4 motors")) 
 	float MotorMass = 5.0f;
 	

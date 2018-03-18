@@ -13,6 +13,8 @@
 #include "QFMEngineController.generated.h"
 
 
+// https://quadcopterproject.wordpress.com/static-thrust-calculation/
+// => m = K n w^f / g : ThrustMass
 // Watch: https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_MotorsMatrix.h
 // https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_MotorsMatrix.cpp
 // https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_MotorsMulticopter.h
@@ -79,11 +81,12 @@ struct FEngineController
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Torque Exponent")) 
 	float Engine_QQ = 2.0f;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Length of Arm in m")) 
-	float Engine_L = 2.0f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Calculate Engine_K with Thrust To lift PlanMaxLift * weight")) 
+	bool CalculateEngine_K = true;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Calculate Engine_K with Thrust To lift PlanMaxLift * weight")) 
+	float PlanMaxLift = 2.0f;
 	
-
-
 	
 	// Mixer
 	UPROPERTY() 
@@ -130,6 +133,10 @@ struct FEngineController
 		BodyInstance = BodyInstanceIn;
 		PrimitiveComponent = PrimitiveComponentIn;
 		Vehicle = VehicleIn;
+		if(CalculateEngine_K)
+		{
+			Engine_K = (PlanMaxLift * Vehicle->Mass * -Vehicle->Gravity) / ( Vehicle->NumberOfEngines * FMath::Pow(1.0f, Engine_Q));
+		}
 	}
 
 	
@@ -222,8 +229,8 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Engine_L * Engine_K / 100.0f;
-				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Engine_L * Engine_K / 100.0f;
+				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
+				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
 				EngineTorque.Z += MixerQuadCross[i].Yaw * SpeedToTorque[i] * Engine_B;
 			}
 
@@ -232,8 +239,8 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Engine_L * Engine_K / 100.0f;
-				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Engine_L * Engine_K / 100.0f;
+				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
+				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
 				EngineTorque.Z += MixerQuadPlus[i].Yaw * SpeedToTorque[i] * Engine_B;
 			}
 
@@ -281,8 +288,8 @@ struct FEngineController
 			SpeedToTorque[i] = FMath::Pow(EngineSpeed[i], Engine_QQ);
 		}
 		FVector EngineTorque = FVector(
-			Engine_L * Engine_K * (SpeedToThrust[2] - SpeedToThrust[0]),
-			Engine_L * Engine_K * (SpeedToThrust[3] - SpeedToThrust[1]),
+			Vehicle->ArmLength * Engine_K * (SpeedToThrust[2] - SpeedToThrust[0]),
+			Vehicle->ArmLength * Engine_K * (SpeedToThrust[3] - SpeedToThrust[1]),
 			Engine_B * (SpeedToTorque[0] - SpeedToTorque[1] + SpeedToTorque[2] - SpeedToTorque[3])
 		);
 		return EngineTorque;
@@ -299,8 +306,8 @@ struct FEngineController
 			SpeedToTorque[i] = FMath::Pow(EngineSpeed[i], Engine_QQ);
 		}
 		FVector EngineTorque = FVector(		
-			Engine_L / FPlatformMath::Sqrt(2) * Engine_K * (SpeedToThrust[3] + SpeedToThrust[2] - SpeedToThrust[0] - SpeedToThrust[1]),
-			Engine_L / FPlatformMath::Sqrt(2) * Engine_K * (SpeedToThrust[0] + SpeedToThrust[3] - SpeedToThrust[1] - SpeedToThrust[2]),
+			Vehicle->ArmLength / FPlatformMath::Sqrt(2) * Engine_K * (SpeedToThrust[3] + SpeedToThrust[2] - SpeedToThrust[0] - SpeedToThrust[1]),
+			Vehicle->ArmLength / FPlatformMath::Sqrt(2) * Engine_K * (SpeedToThrust[0] + SpeedToThrust[3] - SpeedToThrust[1] - SpeedToThrust[2]),
 			Engine_B * (SpeedToTorque[0] - SpeedToTorque[1] + SpeedToTorque[2] - SpeedToTorque[3])
 		);
 		return EngineTorque;
@@ -325,11 +332,7 @@ struct FEngineController
 	// MUST!! be in ]0..1]
 	float GetThrottleHover()
 	{
-		// Assume: 4 Engines!!
-		// ODO: Verallgemeinern
-		float NumEngines = 4;
-		return FMath::Pow( (Vehicle->Mass * -Vehicle->Gravity) / (NumEngines * Engine_K) , (1.0f / Engine_Q));     
-		//return 0.5f;
+		return FMath::Pow( (Vehicle->Mass * -Vehicle->Gravity) / (Vehicle->NumberOfEngines * Engine_K) , (1.0f / Engine_Q));     
 	}
 
 

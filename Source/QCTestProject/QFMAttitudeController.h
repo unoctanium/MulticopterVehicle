@@ -5,6 +5,7 @@
 #include "UObject/ObjectMacros.h"
 
 #include "Components/SceneComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
 
 #include "QFMTypes.h"
@@ -16,7 +17,6 @@
 #include "QFMEngineController.h"
 
 #include "QFMAttitudeController.generated.h"
-
 
 
 /*--- Implementatrion of the Attitude and Position Flight-Controller ---*/

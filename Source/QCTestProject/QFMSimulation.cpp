@@ -37,10 +37,7 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
             }
 
 			if (Debug.PrintVehicle) {
-				GEngine->AddOnScreenDebugMessage(-1, 0, Debug.Color, FString::Printf(TEXT("Center of Mass (m): X=%f Y=%f Z=%f"), CenterOfMass.X, CenterOfMass.Y, CenterOfMass.Z), true, Debug.FontSize);
-				GEngine->AddOnScreenDebugMessage(-1, 0, Debug.Color, FString::Printf(TEXT("Moment of intertia (kg*m^2): X=%f Y=%f Z=%f"), InertiaTensor.X / 10000.0f, InertiaTensor.Y / 10000.0f, InertiaTensor.Z / 10000.0f), true, Debug.FontSize);
-				GEngine->AddOnScreenDebugMessage(-1, 0, Debug.Color, FString::Printf(TEXT("Mass (kg): %f"), Mass), true, Debug.FontSize);
-
+				Vehicle.Debug(Debug.Color, Debug.FontSize);
 			}
 
 			if (Debug.PrintInput) {

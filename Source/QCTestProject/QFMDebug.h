@@ -21,6 +21,7 @@ struct FQuadcopterFlightModelDebugStruct
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Font Color")) 
 	FColor Color = FColor::White;
 
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Debug: Display Pilot Input")) 
 	bool PrintInput = true;
 	

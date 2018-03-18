@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 
 #include "Components/SceneComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
 
 #include "QFMAHRS.generated.h"

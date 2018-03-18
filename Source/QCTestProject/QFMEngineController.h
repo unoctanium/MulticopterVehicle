@@ -3,9 +3,12 @@
 #include "CoreMinimal.h"
 
 #include "Components/SceneComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
 
 #include "QFMTypes.h"
+#include "QFMVehicle.h" // I must read Properties like FrameType and Gravity 
+
 
 #include "QFMEngineController.generated.h"
 
@@ -79,11 +82,6 @@ struct FEngineController
 	
 
 
-
-
-
-
-
 	
 	// Mixer
 	UPROPERTY() 
@@ -121,16 +119,15 @@ struct FEngineController
 	float DeltaTime;
 	FBodyInstance *BodyInstance;
 	UPrimitiveComponent *PrimitiveComponent;
-	EFrameMode FrameMode;
+	FVehicle *Vehicle;
 
 
 
-
-	void Init(FBodyInstance *BodyInstanceIn, UPrimitiveComponent *PrimitiveComponentIn, EFrameMode FrameModeIn)
+	void Init(FBodyInstance *BodyInstanceIn, UPrimitiveComponent *PrimitiveComponentIn, FVehicle * VehicleIn)
 	{
 		BodyInstance = BodyInstanceIn;
 		PrimitiveComponent = PrimitiveComponentIn;
-		FrameMode = FrameModeIn;
+		Vehicle = VehicleIn;
 	}
 
 	
@@ -188,14 +185,14 @@ struct FEngineController
 		// Genauso: L (ArmLength: Array mit Wert pro Engine. Und in die Properties
 		float EngineAlpha[4];
 
-		if (FrameMode == EFrameMode::FrameModeCross)
+		if (Vehicle->FrameMode == EFrameMode::FrameModeCross)
 		{
 			EngineAlpha[0] = FMath::DegreesToRadians<float>(45);
 			EngineAlpha[1] = FMath::DegreesToRadians<float>(45);
 			EngineAlpha[2] = FMath::DegreesToRadians<float>(45);
 			EngineAlpha[3] = FMath::DegreesToRadians<float>(45);
 		}
-		else if (FrameMode == EFrameMode::FrameModePlus)
+		else if (Vehicle->FrameMode == EFrameMode::FrameModePlus)
 		{
 			EngineAlpha[0] = FMath::DegreesToRadians<float>(0);
 			EngineAlpha[1] = FMath::DegreesToRadians<float>(45);
@@ -219,7 +216,7 @@ struct FEngineController
 		
 		FVector EngineTorque = FVector(0.0f, 0.0f, 0.0f);
 
-		if (FrameMode == EFrameMode::FrameModeCross)
+		if (Vehicle->FrameMode == EFrameMode::FrameModeCross)
 		{
 			for (int i = 0; i < 4; i++)
 			{
@@ -229,7 +226,7 @@ struct FEngineController
 			}
 
 		}
-		else if (FrameMode == EFrameMode::FrameModePlus)
+		else if (Vehicle->FrameMode == EFrameMode::FrameModePlus)
 		{
 			for (int i = 0; i < 4; i++)
 			{
@@ -399,7 +396,7 @@ struct FEngineController
 
 		FVector4 DesiredPilotInput = FVector4(RollRequest, PitchRequest, YawRequest, ThrottleRequest );
 
-		if (FrameMode == EFrameMode::FrameModeCross)
+		if (Vehicle->FrameMode == EFrameMode::FrameModeCross)
 		{
 			for (int i = 0; i < 4; i++) {
 				EngineMixPercent[i] = (
@@ -411,7 +408,7 @@ struct FEngineController
 				
 			}
 		}
-		else if (FrameMode == EFrameMode::FrameModePlus)
+		else if (Vehicle->FrameMode == EFrameMode::FrameModePlus)
 		{
 			for (int i = 0; i < 4; i++) {
 				EngineMixPercent[i] = (
@@ -465,6 +462,7 @@ struct FEngineController
 		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Engines RPM: 1=%f 2=%f 3=%f 4=%f"), GetEngineRPM(0), GetEngineRPM(1), GetEngineRPM(2), GetEngineRPM(3)), true, DebugFontSizeIn);
 		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Thrust / Torque: %s / %s"), *TotalThrust.ToString(), *TotalTorque.ToString()), true, DebugFontSizeIn);
 		
+
 	}
 
 

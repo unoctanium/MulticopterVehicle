@@ -38,61 +38,13 @@ void UQuadcopterFlightModel::BeginPlay()
 	// Find My BodyInstance
 	BodyInstance = Parent->GetBodyInstance();
 
-	// Find My Px Rigid Body
-	PRigidBody = BodyInstance->GetPxRigidBody_AssumesLocked();
-	
-
-//	#if WITH_PHYSX
-//	ScreenMsg("Got into PhysX!!!");
-//  #endif
-
-	
-	// Mass, COM and and Inertia overrides
-	if (CalculateMassProperties)
-	{
-		// Calculate new Mass and Inertia Tensor based on Vehicle Properties
-		float facCentralMass = 2.0f / 5.0f * CentralMass * CentralRadius * CentralRadius;
-		InertiaTensor.X = facCentralMass + 2 * ArmLength * ArmLength * MotorMass * 10000.0f;
-		InertiaTensor.Y = facCentralMass + 2 * ArmLength * ArmLength * MotorMass * 10000.0f;
-		InertiaTensor.Z = facCentralMass + 4 * ArmLength * ArmLength * MotorMass * 10000.0f;
-		Mass = CentralMass + 4 * MotorMass;
-		CenterOfMass = FVector(0.0f, 0.0f, 0.0f);
-	}
-	if (EnterMassProperties || CalculateMassProperties)
-	{
-		// Update UE4 Mass Properies based on vehicle Properties (Mass and Inertia Tensor)
-		
-		// PhyX Mass Override
-		BodyInstance->SetMassOverride(Mass, true);
-		BodyInstance->UpdateMassProperties();
-
-		// Set Center Of Mass
-		Parent->SetCenterOfMass(BodyInstance->GetCOMPosition() - BodyInstance->GetCOMPosition());
-		FTransform transform = Parent->GetComponentTransform();
-		BodyInstance->COMNudge = transform.GetTranslation() - BodyInstance->GetCOMPosition() + CenterOfMass * 100;
-
-		// PhyX Inertia Tensor Override
-		PRigidBody->setMassSpaceInertiaTensor(physx::PxVec3(InertiaTensor.X, InertiaTensor.Y, InertiaTensor.Z));
-		
-	}
-	// Store Mass Properties in Vehicle Struct
-	{
-		Mass = BodyInstance->GetBodyMass();
-		InertiaTensor = BodyInstance->GetBodyInertiaTensor();
-		FTransform transform = Parent->GetComponentTransform();
-		CenterOfMass = (BodyInstance->GetCOMPosition() - transform.GetTranslation()) / 100.0f; // To set it in m
-	}
-	
-
-
 	// Init all our Subsystems
+	Vehicle.Init(BodyInstance, Parent)
 	PilotInput.Init(BodyInstance, Parent);
 	AHRS.Init(BodyInstance, Parent);
 	AttitudeController.Init(BodyInstance, Parent, &PilotInput, &AHRS, &PositionController, &EngineController);
 	PositionController.Init(BodyInstance, Parent, &AHRS);
-	EngineController.Init(BodyInstance, Parent, FrameMode);
-
-
+	EngineController.Init(BodyInstance, Parent, &Vehicle);
 
 	// Prepare Substepping, if requested
 	const UPhysicsSettings* Settings = GetDefault<UPhysicsSettings>();

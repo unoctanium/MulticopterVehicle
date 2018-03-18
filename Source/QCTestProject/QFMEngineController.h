@@ -68,7 +68,7 @@ struct FEngineController
 	float EngineMaxRPM = 1000.0f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Thrust Coefficient K")) 
-	float Engine_K = 147.0; 
+	float Engine_K = 147.0; // 294 
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterEngineSettings", meta = (ToolTip = "Engine Thrust Exponent")) 
 	float Engine_Q = 2.0f;
@@ -328,7 +328,7 @@ struct FEngineController
 		// Assume: 4 Engines!!
 		// ODO: Verallgemeinern
 		float NumEngines = 4;
-		return Math::Pow( (Vehicle->Mass * -Vehicle->Gravity) / (NumEngines * Engine_K) , (1.0f / Engine_Q);     
+		return FMath::Pow( (Vehicle->Mass * -Vehicle->Gravity) / (NumEngines * Engine_K) , (1.0f / Engine_Q));     
 		//return 0.5f;
 	}
 

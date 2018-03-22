@@ -82,6 +82,12 @@ AQCPawn::AQCPawn()
 	// Take control of the default player
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
+
+	// Create UDP Actor
+	UDPSender = CreateAbstractDefaultSubobject<ARamaUDPSender>(TEXT("UDP Sender"));
+
+
+
 }
 
 // Called when the game starts or when spawned
@@ -97,7 +103,7 @@ void AQCPawn::BeginPlay()
 	SetupVROptions();
 
 	// Start UDP Sender
-	UDPSender.Start("Socket1","",12345);
+	UDPSender->Start("Socket1","127.0.0.1",12345);
 }
 
 // Called every frame
@@ -116,13 +122,15 @@ void AQCPawn::Tick(float DeltaTime)
 		break;
 	}
 
+	// Write some UDP Test Data
 	DeltaTimeUDP += DeltaTime;
 	if (DeltaTimeUDP > UDPTimer)
 	{
-		UDPSender.SendCustomData();
+		FString ToSend = FString::Printf(TEXT("%f,%f"), RunningTime, FMath::Sin(RunningTime));
+		UDPSender->SendData(ToSend);
 		DeltaTimeUDP = 0.0f;
 	}
-
+	RunningTime += DeltaTime;
 
 }
 

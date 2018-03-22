@@ -26,7 +26,7 @@ public:
 	ARamaUDPSender();
  
 	//UFUNCTION(BlueprintCallable, Category=RamaUDPSender)
-	bool SendCustomData(void);
+	bool SendData(FString ToSend);
  
 	TSharedPtr<FInternetAddr>	RemoteAddr;
 	FSocket* SenderSocket;

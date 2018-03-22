@@ -66,7 +66,7 @@ bool ARamaUDPSender::Start(
 	return true;
 }
  
-bool ARamaUDPSender::SendCustomData(void)
+bool ARamaUDPSender::SendData(FString ToSend)
 {
 	if(!SenderSocket) 
 	{
@@ -76,17 +76,22 @@ bool ARamaUDPSender::SendCustomData(void)
 	//~~~~~~~~~~~~~~~~
  
 	int32 BytesSent = 0;
- 
+
+	/*
 	FUDPCustomData NewData;
 	NewData.XValue = FMath::FRandRange(0,1000);
 	NewData.YValue = FMath::RandRange(0,100);
  
 	FArrayWriter Writer;
- 
+ 	
 	Writer << NewData; //Serializing our custom data, thank you UE4!
+	//SenderSocket->SendTo(Writer.GetData(),Writer.Num(),BytesSent,*RemoteAddr);
  
-	SenderSocket->SendTo(Writer.GetData(),Writer.Num(),BytesSent,*RemoteAddr);
- 
+	*/
+
+	
+	SenderSocket->SendTo((uint8*)TCHAR_TO_UTF8(*ToSend), sizeof(ToSend), BytesSent, *RemoteAddr);
+	
 	if(BytesSent <= 0)
 	{
 		const FString Str = "Socket is valid but the receiver received 0 bytes, make sure it is listening properly!";

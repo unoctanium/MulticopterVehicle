@@ -8,7 +8,7 @@ public class QCTestProject : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "PhysX", "APEX" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "PhysX", "APEX", "Sockets", "Networking" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "HeadMountedDisplay" });
         

@@ -22,6 +22,9 @@
 
 #include "QFMComponent.h"
 
+#include "QFMUDPCustomData.h"
+#include "RamaUDPSender.h"
+
 #include "QCTestPawn.generated.h"
 
 
@@ -91,7 +94,11 @@ public:
 		float VRCamElevation = 80.0f / MeshScale;
 
 
+	// Networking
+	class ARamaUDPSender UDPSender;
 
+	UPROPERTY(Category = "QuadcopterPawn|Networking", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float UDPTimer = 0.1f;
 
 
 public:
@@ -159,6 +166,9 @@ private:
 	void InputCameraZoomOut();
 	float ChaseCameraZoomFactor;
 	float FollowCameraZoomFactor;
+
+	// Timer for UDP
+	float DeltaTimeUDP;
 
 
 public:

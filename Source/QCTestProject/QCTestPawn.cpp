@@ -95,6 +95,9 @@ void AQCPawn::BeginPlay()
 
 	// Setup VR
 	SetupVROptions();
+
+	// Start UDP Sender
+	UDPSender.Start("Socket1","",12345);
 }
 
 // Called every frame
@@ -112,6 +115,14 @@ void AQCPawn::Tick(float DeltaTime)
 		ChaseCameraSpringArm->TargetArmLength = FMath::FInterpTo(ChaseCameraSpringArm->TargetArmLength, ChaseCameraZoomFactor, DeltaTime, 3);
 		break;
 	}
+
+	DeltaTimeUDP += DeltaTime;
+	if (DeltaTimeUDP > UDPTimer)
+	{
+		UDPSender.SendCustomData();
+		DeltaTimeUDP = 0.0f;
+	}
+
 
 }
 

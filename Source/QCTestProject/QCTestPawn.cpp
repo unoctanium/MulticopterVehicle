@@ -48,7 +48,7 @@ AQCPawn::AQCPawn()
     
 	// Create a Quadcopter Component
 	
-	QuadcopterFlightModel = CreateAbstractDefaultSubobject<UQuadcopterFlightModel>(TEXT("Quadcopter Flight Model"));
+	QuadcopterFlightModel = CreateDefaultSubobject<UQuadcopterFlightModel>(TEXT("Quadcopter Flight Model"));
 	QuadcopterFlightModel->SetupAttachment(PawnMesh);
 
     
@@ -79,14 +79,13 @@ AQCPawn::AQCPawn()
 	ChaseCameraZoomFactor = ChaseCameraSpringArm->TargetArmLength;
 
 
+	// Create UDP Actor
+	UDPSender = CreateDefaultSubobject<URamaUDPSender>(TEXT("UDP Sender"));
+	UDPSender->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetIncludingScale);
+
+
 	// Take control of the default player
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
-
-
-	// Create UDP Actor
-	UDPSender = CreateAbstractDefaultSubobject<ARamaUDPSender>(TEXT("UDP Sender"));
-
-
 
 }
 

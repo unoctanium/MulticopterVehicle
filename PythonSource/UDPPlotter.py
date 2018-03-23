@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 ### Constants 
 HOST = '' 
 PORT = 12345 
-BUFFER_LENGTH = 1000
+BUFFER_LENGTH = 500
 
 # class that holds analog data for N samples 
 class UdpData: 
@@ -60,7 +60,7 @@ class UdpPlot:
         if (xmax > xmin):
             plt.xlim(xmin, xmax) 
         plt.draw() 
-        plt.pause(0.001)
+        plt.pause(0.01)
 
 ### Variables 
 udpData = UdpData(BUFFER_LENGTH) 

@@ -10,13 +10,13 @@
 
 #include "QFMUDPCustomData.h"
 
-ARamaUDPSender::ARamaUDPSender()
+URamaUDPSender::URamaUDPSender()
 {	
 	SenderSocket = NULL; 
 	ShowOnScreenDebugMessages = true;
 }
  
-void ARamaUDPSender::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void URamaUDPSender::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	//~~~~~~~~~~~~~~~~
@@ -28,7 +28,7 @@ void ARamaUDPSender::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
  
-bool ARamaUDPSender::Start(
+bool URamaUDPSender::Start(
 	const FString& YourChosenSocketName,
 	const FString& TheIP, 
 	const int32 ThePort
@@ -66,7 +66,7 @@ bool ARamaUDPSender::Start(
 	return true;
 }
  
-bool ARamaUDPSender::SendData(FString ToSend)
+bool URamaUDPSender::SendData(FString ToSend)
 {
 	if(!SenderSocket) 
 	{
@@ -100,7 +100,7 @@ bool ARamaUDPSender::SendData(FString ToSend)
 		return false;
 	}
  
-	ScreenMsg("UDP~ Send Succcess! Bytes Sent = ",BytesSent );
+	//ScreenMsg("UDP~ Send Succcess! Bytes Sent = ",BytesSent );
  
 	return true;
 }

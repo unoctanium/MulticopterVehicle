@@ -95,14 +95,14 @@ public:
 
 
 	// Networking
-	UPROPERTY()
-	class ARamaUDPSender *UDPSender;
+	UPROPERTY(Category = "QuadcopterPawn", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class URamaUDPSender *UDPSender;
 
 	UPROPERTY()
 	float RunningTime = 0.0f;
 
 	UPROPERTY(Category = "QuadcopterPawn|Networking", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	float UDPTimer = 0.1f;
+	float UDPTimer = 0.02f;
 
 
 

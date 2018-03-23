@@ -5,11 +5,12 @@
 #pragma once
  
 #include "CoreMinimal.h"
-#include "Networking.h"
+#include "Runtime/Networking/Public/Networking.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
 #include "Containers/UnrealString.h"
-#include "GameFramework/Actor.h"
+#include "Components/SceneComponent.h"
+//#include "GameFramework/Actor.h"
 #include "UObject/UObjectGlobals.h"
 #include "Serialization/Archive.h"
 
@@ -18,12 +19,12 @@
 #include "RamaUDPSender.generated.h"
  
 UCLASS()
-class ARamaUDPSender : public AActor
+class URamaUDPSender : public USceneComponent
 {
 	GENERATED_BODY()
 
 public: 
-	ARamaUDPSender();
+	URamaUDPSender();
  
 	//UFUNCTION(BlueprintCallable, Category=RamaUDPSender)
 	bool SendData(FString ToSend);

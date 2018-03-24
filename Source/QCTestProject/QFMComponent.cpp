@@ -143,7 +143,3 @@ FVector UQuadcopterFlightModel::GetTotalTorque()
 }
 
 
-
-
-
-

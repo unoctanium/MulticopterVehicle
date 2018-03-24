@@ -24,8 +24,8 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
 	EngineController.Tock(DeltaTime);
 
 	// And Apply Forces calculated in Engine Control
-	AddLocalForceZ(EngineController.GetTotalThrust());
-	AddLocalTorqueRad(EngineController.GetTotalTorque());
+	//AddLocalForceZ(EngineController.GetTotalThrust());
+	//AddLocalTorqueRad(EngineController.GetTotalTorque());
 
     #ifdef WITH_EDITOR
     

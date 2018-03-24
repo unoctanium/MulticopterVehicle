@@ -152,7 +152,7 @@ struct FAttitudeController
 		Reset();
 
 		// we start in Stabilize mode
-		SelectFlightMode(EFlightMode::FM_Direct);
+		SelectFlightMode(FlightMode);
 	}
 
 
@@ -353,7 +353,7 @@ struct FAttitudeController
 
 	// GetPilotDesiredAngleRates - transform pilot's roll pitch and yaw input into a desired lean angle rates 
 	// returns desired angle rates in degrees-per-second 
-	void GetPilotDesiredAngleRates(float RollIn, float PitchIn, float YawIn, float &RollRateOut, float &PitchrateOut, float &YawRateOut)
+	void GetPilotDesiredAngleRates(float RollIn, float PitchIn, float YawIn, float &RollRateOut, float &PitchRateOut, float &YawRateOut)
 	{
 		//float RateLimit;
 		float RollOut;
@@ -393,6 +393,11 @@ struct FAttitudeController
 
 		// calculate yaw rate request 
 		YawOut = GetPilotDesiredYawRate(YawIn);
+
+		RollRateOut = RollOut;
+		PitchRateOut = PitchOut;
+		YawRateOut = YawOut;
+
 	}
 
 
@@ -501,15 +506,31 @@ struct FAttitudeController
 	// Command an angular roll, pitch and rate yaw with angular velocity feedforward 
 	void InputAngleRollPitchRateYaw(float RollIn, float PitchIn, float YawRateIn)
 	{
-
+/*
 		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
 		AttitudeTargetRotator.Roll = RollIn;
 		AttitudeTargetRotator.Pitch = PitchIn;
-		AttitudeTargetRotator.Yaw += YawRateIn * DeltaTime;
-		AttitudeTargetRotator.Clamp();
+		//AttitudeTargetRotator.Yaw += YawRateIn * DeltaTime;
+		//AttitudeTargetRotator = AttitudeTargetRotator.Clamp();
 
-		// Compute quaternion target attitude
+		// Compute quaternion target attitude for roll and pitch
 		AttitudeTargetQuat = FQuat(AttitudeTargetRotator);
+
+		// add rate yaw and fall thru
+		InputRateBodyRollPitchYaw(0.0f, 0.0f, YawRateIn);
+*/
+
+		FRotator AttitudeVehicleRotator = PrimitiveComponent->GetComponentRotation();
+		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
+		AttitudeTargetRotator.Roll = RollIn - AttitudeVehicleRotator.Roll;
+		AttitudeTargetRotator.Pitch = PitchIn - AttitudeVehicleRotator.Pitch;
+		AttitudeTargetRotator.Yaw = YawRateIn * DeltaTime;
+		
+		AttitudeTargetRotator = AttitudeTargetRotator.Clamp();
+		FQuat AttitudeTargetUpdateQuat = FQuat(AttitudeTargetRotator);
+		
+		AttitudeTargetQuat = AttitudeTargetQuat * AttitudeTargetUpdateQuat;
+		AttitudeTargetQuat.Normalize();
 
 		// Set rate feedforward requests to zero 
 		AttitudeTargetAngVel = FVector(0.0f, 0.0f, 0.0f);
@@ -521,22 +542,11 @@ struct FAttitudeController
 
 	void InputRateBodyRollPitchYaw(float RollRateIn, float PitchRateIn, float YawRateIn)
 	{
-
-		// calculate the attitude target euler angles 
-		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
-
-		FQuat AttitudeTargetUpdateQuat;
-		FVector fvect = FMath::DegreesToRadians(FVector(RollRateIn * DeltaTime, PitchRateIn * DeltaTime, YawRateIn * DeltaTime));
-		float theta = fvect.Size();
-		if (theta == 0.0f) {
-			AttitudeTargetUpdateQuat = FQuat(1.0f, 0.0f, 0.0f, 0.0f);
-		}
-		else
-		{
-			fvect /= theta;
-			AttitudeTargetUpdateQuat = FQuat(fvect, theta);
-		}
-
+		FRotator RateRotator = FRotator(PitchRateIn * DeltaTime, YawRateIn * DeltaTime, RollRateIn*DeltaTime);
+		
+		RateRotator = RateRotator.Clamp();
+		FQuat AttitudeTargetUpdateQuat = FQuat(RateRotator);
+		
 		AttitudeTargetQuat = AttitudeTargetQuat * AttitudeTargetUpdateQuat;
 		AttitudeTargetQuat.Normalize();
 
@@ -555,9 +565,42 @@ struct FAttitudeController
     // Calculates the body frame angular velocities to follow the target attitude
     void RunQuat()
     {
+		/*
+		// Testcase: Rate-turn
+		FHitResult Hit;
+		FRotator TargetRotation = AttitudeTargetQuat.Rotator() *0.02f;
+		PrimitiveComponent->AddLocalRotation(TargetRotation, false, &Hit, ETeleportType::TeleportPhysics);
+
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("tgt  : %s"), *AttitudeTargetQuat.Rotator().ToCompactString()), true, FVector2D(1.0f, 1.0f));
+		FQuat AttitudeVehicleQuat = AHRS->GetWorldRotationQuat();
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("src  : %s"), *AttitudeVehicleQuat.Rotator().ToCompactString()), true, FVector2D(1.0f, 1.0f));
+		*/
+
+		
+		/*
+		// Testcase: Angle for Pitch and Roll, Rate for Yaw
+		FHitResult Hit;
+		FRotator WorldRotation = PrimitiveComponent->GetComponentRotation() * -1;
+		FRotator TargetRotation = AttitudeTargetQuat.Rotator() + WorldRotation;
+		TargetRotation = TargetRotation.Clamp();
+		PrimitiveComponent->AddLocalRotation(TargetRotation, false, &Hit, ETeleportType::TeleportPhysics);
+
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("tgt  : %s"), *AttitudeTargetQuat.Rotator().ToCompactString()), true, FVector2D(1.0f, 1.0f));
+		*/
+
+
+		/*
+		// Testcase: Set Angles Direct
+		FHitResult Hit;
+		const FVector Delta = FVector(0.0f, 0.0f, 0.0f);
+		PrimitiveComponent->MoveComponent(Delta, AttitudeTargetQuat, false, &Hit, MOVECOMP_NoFlags, ETeleportType::TeleportPhysics);
+		*/
+
+		
 
 		// Get current Vehicle Attitude
-		FQuat AttitudeVehicleQuat = AHRS->GetWorldRotationQuat();
+		//FQuat AttitudeVehicleQuat = AHRS->GetWorldRotationQuat();
+		FQuat AttitudeVehicleQuat = PrimitiveComponent->GetComponentRotation().Quaternion();
         
 	    // Get From and To Thrust Vectors 
         FVector AttToThrustVector = AttitudeTargetQuat.GetUpVector(); 
@@ -566,31 +609,44 @@ struct FAttitudeController
         // Find the Axis and Angle between those Thrust Vectors 
         FQuat ThrustVectorCorrectionQuat = FQuat::FindBetween(AttFromThrustVector, AttToThrustVector); 
         
-	    // Apply Correction based on the initial rotation done by AttFromQuat 
-        // ODO: I think we do not need this! 
-        ThrustVectorCorrectionQuat = AttitudeVehicleQuat.Inverse() * ThrustVectorCorrectionQuat * AttitudeVehicleQuat; 
+	    // Apply Correction based on the initial rotation  
+        ThrustVectorCorrectionQuat = ThrustVectorCorrectionQuat * AttitudeVehicleQuat; 
         
         // Calculate the remaining rotation required to correct the heading after thrust vector is rotated 
         // Means: Rotate around Z in a way that X (FORWARD) points to the requested X (FORWARD) direction 
-        FQuat HeadingQuat = ThrustVectorCorrectionQuat * AttitudeVehicleQuat.Inverse() * AttitudeTargetQuat; 
+        //FQuat HeadingQuat = ThrustVectorCorrectionQuat * AttitudeVehicleQuat.Inverse() * AttitudeTargetQuat; 
 
 		// Calculate the angular distance between current vehicle attitude and target attitude
-		float AngularSpeed = FMath::RadiansToDegrees(AttitudeVehicleQuat.AngularDistance(HeadingQuat)) / AccroRollPitchPGain;
+		//float AngularSpeed = FMath::RadiansToDegrees(AttitudeVehicleQuat.AngularDistance(HeadingQuat)) / AccroRollPitchPGain;
 
-		// Slerp from current attitude to target attitude, using AngularDistanveDeg to decide about the speed
-		AttitudeTargetQuat = FQuat::Slerp(HeadingQuat, AttitudeTargetQuat, DeltaTime * AngularSpeed);
+		// Slerp from current attitude to target attitude, using AngularDistanceDeg to decide about the speed
+		//AttitudeTargetQuat = FQuat::Slerp(HeadingQuat, AttitudeTargetQuat, DeltaTime * FMath::DegreesToRadians(AngularSpeed));
 
 		// Get the target angular velocity vector to turn from AttitudeVehicleQuat to AttitudeTargetQuat
-		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
-		AttitudeTargetAngVel = FVector(AttitudeTargetRotator.Roll, AttitudeTargetRotator.Pitch, AttitudeTargetRotator.Yaw);
+		//FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
+		//AttitudeTargetAngVel = FVector(AttitudeTargetRotator.Roll, AttitudeTargetRotator.Pitch, AttitudeTargetRotator.Yaw);
 
+		FQuat TargetQuat = FQuat::Slerp(ThrustVectorCorrectionQuat, AttitudeTargetQuat, DeltaTime * FMath::DegreesToRadians(AccroRollPitchPGain));
+		//FQuat TargetQuat = FQuat::Slerp(HeadingQuat, AttitudeTargetQuat, DeltaTime *AngularSpeed);
+		
+		FHitResult Hit;
+		PrimitiveComponent->MoveComponent(FVector::ZeroVector, TargetQuat, false, &Hit, MOVECOMP_NoFlags, ETeleportType::TeleportPhysics);
+
+
+
+		//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("to  : %s"), *AttToThrustVector.ToCompactString()), true, FVector2D(1.0f, 1.0f));
+		//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("fm  : %s"), *AttFromThrustVector.ToCompactString()), true, FVector2D(1.0f, 1.0f));
+
+
+
+/*
 		//
 		UpdateThrottleRPYMix(); 
 
 		EngineController->SetRoll(RateTargetToMotorRoll(AHRS->GetBodyAngularVelocityVect().X, AttitudeTargetAngVel.X));
 		EngineController->SetPitch(RateTargetToMotorPitch(AHRS->GetBodyAngularVelocityVect().Y, AttitudeTargetAngVel.Y));
 		EngineController->SetYaw(RateTargetToMotorYaw(AHRS->GetBodyAngularVelocityVect().Z, AttitudeTargetAngVel.Z));
-
+*/
     }
 
 

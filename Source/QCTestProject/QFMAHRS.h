@@ -66,7 +66,7 @@ struct FAHRS
 		AngularAcceleration = (OldAngularVelocity - AngularVelocity) / DeltaTime;
 
 	///NEW
-		WorldRotationQuat = bodyTransform.GetRotation(); // in deg?
+		WorldRotationQuat = bodyTransform.GetRotation(); // in rad
 		WorldTranslationVect = bodyTransform.GetTranslation() / 100.0f; // in m	
 		BodyAngularVelocityVect = FMath::RadiansToDegrees(BodyInstance->GetUnrealWorldAngularVelocityInRadians()); // in deg/s
 	}

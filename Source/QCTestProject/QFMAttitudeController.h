@@ -506,26 +506,33 @@ struct FAttitudeController
 	// Command an angular roll, pitch and rate yaw with angular velocity feedforward 
 	void InputAngleRollPitchRateYaw(float RollIn, float PitchIn, float YawRateIn)
 	{
-/*
+
 		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
 		AttitudeTargetRotator.Roll = RollIn;
 		AttitudeTargetRotator.Pitch = PitchIn;
-		//AttitudeTargetRotator.Yaw += YawRateIn * DeltaTime;
-		//AttitudeTargetRotator = AttitudeTargetRotator.Clamp();
+		AttitudeTargetRotator.Yaw += YawRateIn * DeltaTime;
+		AttitudeTargetRotator = AttitudeTargetRotator.Clamp();
 
 		// Compute quaternion target attitude for roll and pitch
 		AttitudeTargetQuat = FQuat(AttitudeTargetRotator);
 
 		// add rate yaw and fall thru
-		InputRateBodyRollPitchYaw(0.0f, 0.0f, YawRateIn);
-*/
+		//InputRateBodyRollPitchYaw(0.0f, 0.0f, YawRateIn);
+
+		// Set rate feedforward requests to zero 
+		AttitudeTargetAngVel = FVector(0.0f, 0.0f, 0.0f);
+
+		// Call quaternion attitude controller
+		RunQuat();
+
+/*
 
 		FRotator AttitudeVehicleRotator = PrimitiveComponent->GetComponentRotation();
-		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
+		
+		FRotator AttitudeTargetRotator = FRotator();// AttitudeTargetQuat.Rotator();
 		AttitudeTargetRotator.Roll = RollIn - AttitudeVehicleRotator.Roll;
 		AttitudeTargetRotator.Pitch = PitchIn - AttitudeVehicleRotator.Pitch;
 		AttitudeTargetRotator.Yaw = YawRateIn * DeltaTime;
-		
 		AttitudeTargetRotator = AttitudeTargetRotator.Clamp();
 		FQuat AttitudeTargetUpdateQuat = FQuat(AttitudeTargetRotator);
 		
@@ -537,6 +544,8 @@ struct FAttitudeController
 
 		// Call quaternion attitude controller
 		RunQuat();
+		*/
+		
 	}
 	
 
@@ -596,12 +605,114 @@ struct FAttitudeController
 		PrimitiveComponent->MoveComponent(Delta, AttitudeTargetQuat, false, &Hit, MOVECOMP_NoFlags, ETeleportType::TeleportPhysics);
 		*/
 
+
+
+
+
+
+
+
+
+
 		
 
 		// Get current Vehicle Attitude
 		//FQuat AttitudeVehicleQuat = AHRS->GetWorldRotationQuat();
 		FQuat AttitudeVehicleQuat = PrimitiveComponent->GetComponentRotation().Quaternion();
-        
+		
+		// Calculate Delta between current attitude and target attitude
+		FQuat DeltaQuat = AttitudeTargetQuat * AttitudeVehicleQuat.Inverse();
+
+		// for the velocity calculation use the shortest quaternion delta
+		FQuat DeltaQuatShortest;
+		float DotProduct = AttitudeTargetQuat | AttitudeVehicleQuat;
+		if (DotProduct<0)
+			DeltaQuatShortest = FQuat(-AttitudeTargetQuat.X, -AttitudeTargetQuat.Y, -AttitudeTargetQuat.Z, AttitudeTargetQuat.W) * AttitudeVehicleQuat.Inverse();
+		else
+			DeltaQuatShortest = DeltaQuat;
+		
+		// calculate angular velocity between current attitude and target attitude
+		//FQuat VelocityQuat = 2.0f * exp(log(DeltaQuat) * DeltaTime) * ConTargetQuat;
+		FQuat VelocityQuat = ((DeltaQuatShortest * 2.0f) * DeltaTime) * AttitudeVehicleQuat.Inverse();
+
+		///////////
+		// DEBUG //
+		// Debug Target Attitude
+		// To Debug: 
+		// 1) Comment out these lines in QFMSimulation.cpp:
+		//AddLocalForceZ(EngineController.GetTotalThrust());
+		//AddLocalTorqueRad(EngineController.GetTotalTorque());
+		// 2) Comment out the following lines of code with "EngineController->SetPitch*, *Roll*, *Yaw*
+		// 3) in UE Editor: Uncheck Gravity in Physics section of Mesh
+		FQuat TargetQuat = DeltaQuat * AttitudeVehicleQuat;
+		FHitResult Hit;
+		//PrimitiveComponent->MoveComponent(FVector::ZeroVector, TargetQuat, false, &Hit, MOVECOMP_NoFlags, ETeleportType::TeleportPhysics);
+		// Debug Output
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("dotf  : %f"), DotProduct), true, FVector2D(1.0f, 1.0f));
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("velq  : %s"), *VelocityQuat.ToString()), true, FVector2D(1.0f, 1.0f));
+		
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("tgte  : %s"), *TargetQuat.Rotator().ToString()), true, FVector2D(1.0f, 1.0f));
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("dele  : %s"), *DeltaQuat.Rotator().ToString()), true, FVector2D(1.0f, 1.0f));
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("dste  : %s"), *AttitudeTargetQuat.Rotator().ToString()), true, FVector2D(1.0f, 1.0f));
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("srce  : %s"), *AttitudeVehicleQuat.Rotator().ToString()), true, FVector2D(1.0f, 1.0f));
+
+		//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("tgtq  : %s"), *TargetQuat.ToString()), true, FVector2D(1.0f, 1.0f));
+		//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("delq  : %s"), *DeltaQuat.ToString()), true, FVector2D(1.0f, 1.0f));
+		//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("dstq  : %s"), *AttitudeTargetQuat.ToString()), true, FVector2D(1.0f, 1.0f));
+		//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("srcq  : %s"), *AttitudeVehicleQuat.ToString()), true, FVector2D(1.0f, 1.0f));
+		// End of DEBUG //
+		//////////////////
+		
+
+
+		
+		FVector BodyAngularVelocityVect = -AHRS->BodyAngularVelocityVect;
+		FVector VelocityToApply = FMath::RadiansToDegrees(FVector(VelocityQuat.X, VelocityQuat.Y, VelocityQuat.Z)); 
+		FVector BodyAngularVelocityVectTgt = BodyAngularVelocityVect + VelocityToApply;
+		FVector PIDVelocityToApply = FVector (
+			VelocityToApply.X,//RateTargetToMotorRoll(BodyAngularVelocityVect.X, VelocityToApply.X),
+			0,//VelocityToApply.Y,//RateTargetToMotorPitch(AHRS->GetBodyAngularVelocityVect().Y, VelocityToApply.Y),
+			0//VelocityToApply.Z//RateTargetToMotorYaw(AHRS->GetBodyAngularVelocityVect().Z, VelocityToApply.Z)
+		); 
+
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("av-pid  : %s"), *PIDVelocityToApply.ToString()), true, FVector2D(1.0f, 1.0f));
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("av-add  : %s"), *VelocityToApply.ToString()), true, FVector2D(1.0f, 1.0f));
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("av-tgt  : %s"), *BodyAngularVelocityVectTgt.ToString()), true, FVector2D(1.0f, 1.0f));
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("av-src  : %s"), *BodyAngularVelocityVect.ToString()), true, FVector2D(1.0f, 1.0f));
+
+
+
+
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("atttgt  : %s"), *AttitudeTargetQuat.Rotator().ToString()), true, FVector2D(1.0f, 1.0f));
+
+
+		//FVector finalLocalTorque = PrimitiveComponent->GetComponentQuat().RotateVector(PIDVelocityToApply) * 10000.0f; // T = r x F, so kg cm^2 s^-2 => multiply by 10000 to convert from m^2 to cm^2
+		//FVector finalLocalTorque = (PIDVelocityToApply) * 10000.0f; // T = r x F, so kg cm^2 s^-2 => multiply by 10000 to convert from m^2 to cm^2
+		FVector finalLocalTorque = PrimitiveComponent->GetComponentQuat().RotateVector(PIDVelocityToApply) * 10000000.0f; // T = r x F, so kg cm^2 s^-2 => multiply by 10000 to convert from m^2 to cm^2
+		//FVector finalLocalTorque = PrimitiveComponent->GetComponentQuat().RotateVector(FVector(-AttitudeTargetQuat.Rotator().Roll*5000,0,0));
+		//finalLocalTorque = FMath::DegreesToRadians(finalLocalTorque);
+		//finalLocalTorque *= 40000*30;
+		BodyInstance->AddTorqueInRadians(finalLocalTorque, false, false);   
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/*
 	    // Get From and To Thrust Vectors 
         FVector AttToThrustVector = AttitudeTargetQuat.GetUpVector(); 
         FVector AttFromThrustVector = AttitudeVehicleQuat.GetUpVector(); 
@@ -614,7 +725,7 @@ struct FAttitudeController
         
         // Calculate the remaining rotation required to correct the heading after thrust vector is rotated 
         // Means: Rotate around Z in a way that X (FORWARD) points to the requested X (FORWARD) direction 
-        //FQuat HeadingQuat = ThrustVectorCorrectionQuat * AttitudeVehicleQuat.Inverse() * AttitudeTargetQuat; 
+        //FQuat HeadingQuat = ThrustVectorCorrectionQuat.Inverse() * AttitudeVehicleQuat.Inverse() * AttitudeTargetQuat; 
 
 		// Calculate the angular distance between current vehicle attitude and target attitude
 		//float AngularSpeed = FMath::RadiansToDegrees(AttitudeVehicleQuat.AngularDistance(HeadingQuat)) / AccroRollPitchPGain;
@@ -626,13 +737,17 @@ struct FAttitudeController
 		//FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
 		//AttitudeTargetAngVel = FVector(AttitudeTargetRotator.Roll, AttitudeTargetRotator.Pitch, AttitudeTargetRotator.Yaw);
 
-		FQuat TargetQuat = FQuat::Slerp(ThrustVectorCorrectionQuat, AttitudeTargetQuat, DeltaTime * FMath::DegreesToRadians(AccroRollPitchPGain));
+		//FQuat TargetQuat = FQuat::Slerp(AttitudeVehicleQuat, AttitudeTargetQuat, DeltaTime * FMath::DegreesToRadians(AccroRollPitchPGain));
+		//1!// FQuat TargetQuat = FQuat::Slerp(ThrustVectorCorrectionQuat, AttitudeTargetQuat, DeltaTime * FMath::DegreesToRadians(AccroRollPitchPGain));
+		//FQuat TargetQuat = FQuat::Slerp(AttitudeVehicleQuat, ThrustVectorCorrectionQuat, DeltaTime * FMath::DegreesToRadians(AccroRollPitchPGain));
+		//FQuat TargetQuat = FQuat::Slerp(HeadingQuat, AttitudeTargetQuat, DeltaTime * FMath::DegreesToRadians(AccroRollPitchPGain));
 		//FQuat TargetQuat = FQuat::Slerp(HeadingQuat, AttitudeTargetQuat, DeltaTime *AngularSpeed);
-		
+		FQuat TargetQuat = ThrustVectorCorrectionQuat;
+
 		FHitResult Hit;
 		PrimitiveComponent->MoveComponent(FVector::ZeroVector, TargetQuat, false, &Hit, MOVECOMP_NoFlags, ETeleportType::TeleportPhysics);
 
-
+*/
 
 		//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("to  : %s"), *AttToThrustVector.ToCompactString()), true, FVector2D(1.0f, 1.0f));
 		//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("fm  : %s"), *AttFromThrustVector.ToCompactString()), true, FVector2D(1.0f, 1.0f));

@@ -22,6 +22,11 @@
 // https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_Motors_Class.h
 // https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_Motors_Class.cpp
 
+
+// Roll right = +
+// pitch up = +
+// yaw right = +
+
 USTRUCT()
 struct FQuadcopterFlightModelMixerStruct
 {

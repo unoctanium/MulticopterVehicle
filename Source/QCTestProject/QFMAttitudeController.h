@@ -617,8 +617,8 @@ struct FAttitudeController
 		
 
 		// Get current Vehicle Attitude
-		//FQuat AttitudeVehicleQuat = AHRS->GetWorldRotationQuat();
-		FQuat AttitudeVehicleQuat = PrimitiveComponent->GetComponentRotation().Quaternion();
+		FQuat AttitudeVehicleQuat = AHRS->GetWorldRotationQuat();
+		//FQuat AttitudeVehicleQuat = PrimitiveComponent->GetComponentRotation().Quaternion();
 		FQuat AttitudeVehicleQuatConj = AttitudeVehicleQuat.Inverse();
 
 
@@ -680,17 +680,29 @@ struct FAttitudeController
 		
 		FVector BodyAngularVelocityVect = AHRS->BodyAngularVelocityVect;
 		FVector VelocityToApply = FMath::RadiansToDegrees(FVector(VelocityQuat.X, VelocityQuat.Y, VelocityQuat.Z)); 
+
+		// Transform Velocity into world frame????
+		FTransform bodyTransform = PrimitiveComponent->GetComponentTransform();
+		VelocityToApply = bodyTransform.InverseTransformVector(VelocityToApply);
+
+
 		FVector BodyAngularVelocityVectTgt = BodyAngularVelocityVect + VelocityToApply;
 
 		// Clamp and Normalize Velocity To Apply
 		//AccroRollPitchPGain
 		//YawPGain		
 
+		//FVector PIDVelocityToApply = FVector (
+		//	VelocityToApply.X, //FMath::RadiansToDegrees(RateTargetToMotorRoll(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X)),
+		//	VelocityToApply.Y, //FMath::RadiansToDegrees(RateTargetToMotorPitch(BodyAngularVelocityVect.Y, BodyAngularVelocityVectTgt.Y)),
+		//	VelocityToApply.Z //FMath::RadiansToDegrees(RateTargetToMotorYaw(BodyAngularVelocityVect.Z, BodyAngularVelocityVectTgt.Z))
+		//); 
 		FVector PIDVelocityToApply = FVector (
-			VelocityToApply.X, //FMath::RadiansToDegrees(RateTargetToMotorRoll(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X)),
-			VelocityToApply.Y, //FMath::RadiansToDegrees(RateTargetToMotorPitch(BodyAngularVelocityVect.Y, BodyAngularVelocityVectTgt.Y)),
-			VelocityToApply.Z //FMath::RadiansToDegrees(RateTargetToMotorYaw(BodyAngularVelocityVect.Z, BodyAngularVelocityVectTgt.Z))
+			FMath::RadiansToDegrees(RateTargetToMotorRoll(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X)),
+			FMath::RadiansToDegrees(RateTargetToMotorPitch(BodyAngularVelocityVect.Y, BodyAngularVelocityVectTgt.Y)),
+			FMath::RadiansToDegrees(RateTargetToMotorYaw(BodyAngularVelocityVect.Z, BodyAngularVelocityVectTgt.Z))
 		); 
+
 
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("av-pid  : %s"), *PIDVelocityToApply.ToString()), true, FVector2D(1.0f, 1.0f));
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("av-add  : %s"), *VelocityToApply.ToString()), true, FVector2D(1.0f, 1.0f));
@@ -708,10 +720,16 @@ struct FAttitudeController
 		FVector finalLocalTorque = PrimitiveComponent->GetComponentQuat().RotateVector(PIDVelocityToApply) * 10000.0f; // T = r x F, so kg cm^2 s^-2 => multiply by 10000 to convert from m^2 to cm^2
 		//FVector finalLocalTorque = PrimitiveComponent->GetComponentQuat().RotateVector(FVector(-AttitudeTargetQuat.Rotator().Roll*5000,0,0));
 		//finalLocalTorque = FMath::DegreesToRadians(finalLocalTorque);
-		finalLocalTorque *= 200;
-		BodyInstance->AddTorqueInRadians(finalLocalTorque, false, false);   
-
 		
+		// WOrking: Withot COG, Inert,Mass
+		// Should calc the factor correctly
+		//finalLocalTorque *= 0.001;
+		//BodyInstance->AddTorqueInRadians(finalLocalTorque, true, true);   
+
+		finalLocalTorque *= 100;
+		BodyInstance->AddTorqueInRadians(finalLocalTorque, true, false);   
+
+
 
 
 

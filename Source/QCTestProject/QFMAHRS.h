@@ -54,6 +54,7 @@ struct FAHRS
 	void Tock(float DeltaTime)
 	{
 		FTransform bodyTransform = PrimitiveComponent->GetComponentTransform();
+		
 		Position = bodyTransform.GetTranslation() / 100.0f; // in m
 		Rotation = bodyTransform.GetRotation().Rotator(); // in deg
 		float OldLinearVelocity = LinearVelocity;

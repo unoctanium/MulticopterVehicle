@@ -625,6 +625,7 @@ struct FAttitudeController
 		// Calculate Delta between current attitude and target attitude
 		FQuat DeltaQuat = AttitudeTargetQuat * AttitudeVehicleQuatConj;
 
+
 		// for the velocity calculation use the shortest quaternion delta
 		//FQuat DeltaQuatShortest = DeltaQuat;
 		//DeltaQuatShortest.EnforceShortestArcWith(AttitudeVehicleQuatConj);
@@ -634,16 +635,17 @@ struct FAttitudeController
 			DeltaQuatShortest = (AttitudeTargetQuat * -1) * AttitudeVehicleQuatConj;
 		else
 			DeltaQuatShortest = AttitudeTargetQuat * AttitudeVehicleQuatConj;
-		
-
-
-		DeltaQuatShortest = FQuat::Slerp(AttitudeVehicleQuat, AttitudeTargetQuat, DeltaTime * FMath::DegreesToRadians(AccroRollPitchPGain));
+			
 
 		// calculate angular velocity between current attitude and target attitude
 		//FQuat VelocityQuat = 2.0f * exp(log(DeltaQuat) * DeltaTime) * ConTargetQuat;
 		//FQuat VelocityQuat = ((DeltaQuatShortest * 2.0f) * DeltaTime) * AttitudeVehicleQuatConj;
 		//FQuat VelocityQuat = ((DeltaQuatShortest  * DeltaQuatShortest) * 2.0f * DeltaTime) * AttitudeVehicleQuatConj;
 		FQuat VelocityQuat = ((DeltaQuatShortest) * 2.0f * DeltaTime) ;
+
+
+		//FQuat DeltaQuatShortest = FQuat::FastLerp(AttitudeVehicleQuat, AttitudeTargetQuat, 0.2);
+		//FQuat VelocityQuat = ((DeltaQuatShortest) * DeltaTime ) ;
 
 		///////////
 		// DEBUG //
@@ -685,9 +687,9 @@ struct FAttitudeController
 		//YawPGain		
 
 		FVector PIDVelocityToApply = FVector (
-			FMath::RadiansToDegrees(RateTargetToMotorRoll(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X)),
-			FMath::RadiansToDegrees(RateTargetToMotorPitch(BodyAngularVelocityVect.Y, BodyAngularVelocityVectTgt.Y)),
-			FMath::RadiansToDegrees(RateTargetToMotorYaw(BodyAngularVelocityVect.Z, BodyAngularVelocityVectTgt.Z))
+			VelocityToApply.X, //FMath::RadiansToDegrees(RateTargetToMotorRoll(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X)),
+			VelocityToApply.Y, //FMath::RadiansToDegrees(RateTargetToMotorPitch(BodyAngularVelocityVect.Y, BodyAngularVelocityVectTgt.Y)),
+			VelocityToApply.Z //FMath::RadiansToDegrees(RateTargetToMotorYaw(BodyAngularVelocityVect.Z, BodyAngularVelocityVectTgt.Z))
 		); 
 
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::White, FString::Printf(TEXT("av-pid  : %s"), *PIDVelocityToApply.ToString()), true, FVector2D(1.0f, 1.0f));

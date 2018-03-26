@@ -125,7 +125,8 @@ void AQCPawn::Tick(float DeltaTime)
 	DeltaTimeUDP += DeltaTime;
 	if (DeltaTimeUDP > UDPTimer)
 	{
-		FString ToSend = FString::Printf(TEXT("%f,%f"), RunningTime, FMath::Sin(RunningTime));
+		FVector DebugData = QuadcopterFlightModel->GetUDPDebugOutput();
+		FString ToSend = FString::Printf(TEXT("%f,%f"), RunningTime, DebugData.Z);
 		UDPSender->SendData(ToSend);
 		DeltaTimeUDP = 0.0f;
 	}

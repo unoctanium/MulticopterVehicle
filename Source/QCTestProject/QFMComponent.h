@@ -133,6 +133,11 @@ public:
 	// Functions related to Pilot Input
 	//void ResetPilotInput(void);
     
+
+	// UDP Debug Output
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|Engine") 
+	FVector GetUDPDebugOutput();
+
     
 private:
     

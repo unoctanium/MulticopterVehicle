@@ -143,3 +143,7 @@ FVector UQuadcopterFlightModel::GetTotalTorque()
 }
 
 
+FVector UQuadcopterFlightModel::GetUDPDebugOutput()
+{
+	return AttitudeController.GetUDPDebugOutput();
+}

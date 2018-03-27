@@ -74,31 +74,31 @@ struct FAttitudeController
 	float ThrottleDeadzone = 0.1f;   
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID P"))
-	float RateRollP = 0.02;//4.0f;//0.15f;
+	float RateRollP = 0.002;//4.0f;//0.15f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID I"))
-	float RateRollI = 0.02;//0.2f;//0.1f;
+	float RateRollI = 0.002;//0.2f;//0.1f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID D"))
-	float RateRollD = 0.03;//0.4f;//0.004f;
+	float RateRollD = 0.003;//0.4f;//0.004f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID P"))
-	float RatePitchP = 0.02;//4.0f;//0.15f;
+	float RatePitchP = 0.002;//4.0f;//0.15f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID I"))
-	float RatePitchI = 0.02;//0.2f;//0.1f;
+	float RatePitchI = 0.002;//0.2f;//0.1f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID D"))
-	float RatePitchD = 0.03;//0.4f;//0.004f;
+	float RatePitchD = 0.003;//0.4f;//0.004f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID P"))
-	float RateYawP = 0.02;//4.0f;//0.02f;
+	float RateYawP = 0.002;//4.0f;//0.02f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID I"))
-	float RateYawI = 0.02;//0.2f;//0.02f;
+	float RateYawI = 0.002;//0.2f;//0.02f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID D"))
-	float RateYawD = 0.03;//0.4f;//0.0f;
+	float RateYawD = 0.003;//0.4f;//0.0f;
 
 
 
@@ -271,10 +271,9 @@ struct FAttitudeController
 		ThrottleScaled = GetPilotDesiredThrottle(PilotInput.W);
 		EngineController->SetThrottleOut(ThrottleScaled);
 		
-		UpdateThrottleRPYMix(); 
-		EngineController->SetRoll(PilotInput.X);
-		EngineController->SetPitch(PilotInput.Y);
-		EngineController->SetYaw(PilotInput.Z);
+		EngineController->SetRollRate(PilotInput.X);
+		EngineController->SetPitchRate(PilotInput.Y);
+		EngineController->SetYawRate(PilotInput.Z);
 	}
 
 
@@ -670,32 +669,22 @@ struct FAttitudeController
 		FVector FinalVelocityToApply = AttitudeVehicleQuat.RotateVector(PIDVelocityToApply);
 		
 		// Send Calculated Roll Rates in rads to the Engine Controller
-		EngineController->SetRollRate(FinalVelocityToApply.X);
-		EngineController->SetPitchRate(FinalVelocityToApply.Y);
-		EngineController->SetYawRate(FinalVelocityToApply.Z);
+		//EngineController->SetRollRate(FinalVelocityToApply.X);
+		//EngineController->SetPitchRate(FinalVelocityToApply.Y);
+		//EngineController->SetYawRate(FinalVelocityToApply.Z);
 
 		
-		//UDPDebugOutput = FVector(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X, PIDVelocityToApply.X);
+
 		
 		// This will be placed in EngineController and/or Simulate
 		//FVector FinalTorque = FinalVelocityToApply; // Because of UE4s units of Torque, we could calibrate here...
 		//BodyInstance->AddTorqueInRadians(FinalTorque, true, true);   
-		
-		// Add it will be replaced here by this:
-/*
-		// Update Throttle Mix to stay in controllable range
-		UpdateThrottleRPYMix(); 
-
-		
-*/
-//UE_LOG(LogTemp,Display,TEXT("V/PV %f, %f"), VelocityToApply.X, PIDVelocityToApply.X );
-
-
 		//FHitResult Hit = FHitResult();
 		//PrimitiveComponent->MoveComponent(FVector::ZeroVector, DeltaQuat * AttitudeVehicleQuat, false, &Hit, EMoveComponentFlags::MOVECOMP_NoFlags, ETeleportType::TeleportPhysics);
-
 		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(FinalVelocityToApply, true, NAME_None);
-
+		
+		//UE_LOG(LogTemp,Display,TEXT("V/PV %f, %f"), VelocityToApply.X, PIDVelocityToApply.X );
+		//UDPDebugOutput = FVector(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X, PIDVelocityToApply.X);
 
     }
 

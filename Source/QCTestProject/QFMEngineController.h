@@ -163,6 +163,9 @@ struct FEngineController
 
 		// Calculate new Forces
 		GetEngineForces();
+
+		//PrimitiveComponent->SetPhysicsAngularVelocityInRadians(TotalTorque, true, NAME_None);
+
 	}
 
 	
@@ -234,9 +237,9 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
-				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
-				EngineTorque.Z += MixerQuadCross[i].Yaw * SpeedToTorque[i] * Engine_B;
+				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
+				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
+				EngineTorque.Z += MixerQuadCross[i].Yaw * SpeedToTorque[i] * Engine_B / 2000.0f;
 			}
 
 		}
@@ -244,9 +247,10 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
-				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
-				EngineTorque.Z += MixerQuadPlus[i].Yaw * SpeedToTorque[i] * Engine_B;
+				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
+				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
+				EngineTorque.Z += MixerQuadPlus[i].Yaw * SpeedToTorque[i] * Engine_B / 2000.0f
+				;
 			}
 
 		}
@@ -349,21 +353,21 @@ struct FEngineController
 
 
 	// Set Roll -1..1
-	void SetRoll(float ValueIn)
+	void SetRollRate(float ValueIn)
 	{
 		RollRequest = ValueIn;
 	}
 
 
 	// Set Pitch -1..1
-	void SetPitch(float ValueIn)
+	void SetPitchRate(float ValueIn)
 	{
 		PitchRequest = ValueIn;
 	}
 
 
 	// Set Yaw -1..1
-	void SetYaw(float ValueIn)
+	void SetYawRate(float ValueIn)
 	{
 		YawRequest = ValueIn;
 	}
@@ -466,6 +470,12 @@ struct FEngineController
 		
 	}
 
+
+	// Update Throttle Mix to stay in controllable range
+	void UpdateThrottleRPYMix()
+	{
+
+	}
 
 
 	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)

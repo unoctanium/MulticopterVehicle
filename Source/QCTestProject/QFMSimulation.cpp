@@ -8,6 +8,10 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
     // only do something if time ellapsed
     if (DeltaTime <= 0.0f) { return; }
 
+	//double start = FPlatformTime::Seconds();
+	UE_LOG(LogTemp, Warning, TEXT("timestamp %f"), FPlatformTime::Seconds());
+
+
 	// read new Pilot Input
     PilotInput.Tock(DeltaTime);
 
@@ -63,6 +67,9 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
         }
     #endif
     
+	//double end = FPlatformTime::Seconds();
+	//UE_LOG(LogTemp, Warning, TEXT("code executed in %f seconds."), end-start);
+
     
 }
 

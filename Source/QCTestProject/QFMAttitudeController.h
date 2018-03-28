@@ -608,7 +608,7 @@ struct FAttitudeController
 		// OPTION #1 Torque with Velocity-Change in rads 
 		//FVector FinalTorque = AngularVelocityToApply; // a) raw
 		//FVector FinalTorque = PIDAngularVelocityToApply; // b) with PIDs
-		FVector FinalTorque = PIDAngularVelocityToApply; // c) with SPDs
+		FVector FinalTorque = SPDAngularVelocityToApply; // c) with SPDs
 		BodyInstance->AddTorqueInRadians(FinalTorque, true, true);  
 */
 ///*
@@ -616,7 +616,7 @@ struct FAttitudeController
 		// to multiply with inertia tensor local then rotationTensor coords 
 		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);  // a) raw
 		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(PIDAngularVelocityToApply); // b) with PIDs
-		Vector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(PIDAngularVelocityToApply); // b) with PIDs
+		Vector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(SPDAngularVelocityToApply); // c) with PIDs
 		FQuat InertiaTensorRotation = BodyInstance->GetMassSpaceToWorldSpace().GetRotation(); 
 		FVector AngularVelocityLocalInertia = InertiaTensorRotation * AngularVelocityLocal; 
 		AngularVelocityLocalInertia *= BodyInstance->GetBodyInertiaTensor(); 
@@ -627,7 +627,7 @@ struct FAttitudeController
 	}
 
 
-	FVector3 StepRateRollSpd(FVector Now, FVector Axis, float Angle)
+	FVector StepRateRollSpd(FVector Now, FVector Axis, float Angle)
 	{
 		float kp = (6.0f * SPDFrequency) * (6.0f * SPDFrequency)* 0.25f; 
 		float kd = 4.5f * SPDFrequency * SPDDamping; 
@@ -636,7 +636,7 @@ struct FAttitudeController
 		float ksg = kp * g; 
 		float kdg = (kd + kp * dt) * g; 
 
-		return FVector(kp * axis * Angle - kd * Now);
+		return FVector(kp * Axis * Angle - kd * Now);
 	}
 
 

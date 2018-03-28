@@ -73,32 +73,38 @@ struct FAttitudeController
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "deadzone in % (0..1) up and % down from center")) 
 	float ThrottleDeadzone = 0.1f;   
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "SPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
+	float SPDDamping = 1.0f;	
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "SPD Frequency. Reach 95% of target in 1/Freq secs"))
+	float SPDFrequency = 6.0f;
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID P"))
-	float RateRollP = 0.002;//4.0f;//0.15f;
+	float RateRollP = 0.004f;//4.0f;//0.15f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID I"))
-	float RateRollI = 0.002;//0.2f;//0.1f;
+	float RateRollI = 0.004f;//0.2f;//0.1f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID D"))
-	float RateRollD = 0.003;//0.4f;//0.004f;
+	float RateRollD = 0.1f;//0.4f;//0.004f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID P"))
-	float RatePitchP = 0.002;//4.0f;//0.15f;
+	float RatePitchP = 0.004f;//4.0f;//0.15f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID I"))
-	float RatePitchI = 0.002;//0.2f;//0.1f;
+	float RatePitchI = 0.004f;//0.2f;//0.1f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID D"))
-	float RatePitchD = 0.003;//0.4f;//0.004f;
+	float RatePitchD = 0.1f;//0.4f;//0.004f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID P"))
-	float RateYawP = 0.002;//4.0f;//0.02f;
+	float RateYawP = 0.004f;//4.0f;//0.02f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID I"))
-	float RateYawI = 0.002;//0.2f;//0.02f;
+	float RateYawI = 0.004f;//0.2f;//0.02f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID D"))
-	float RateYawD = 0.003;//0.4f;//0.0f;
+	float RateYawD = 0.1f;//0.4f;//0.0f;
 
 
 
@@ -558,152 +564,80 @@ struct FAttitudeController
 	}
 
 
-
-
 	/* --- RUN QUAT --- */
 
-    // Calculates the body frame angular velocities to follow the target attitude
-    void RunQuat()
-    {
-/*
-		// Get current Vehicle Attitude in World Space
-		FTransform bodyTransform = PrimitiveComponent->GetComponentTransform();
+	void RunQuat()
+	{
+		FTransform bodyTransform =  BodyInstance->GetUnrealWorldTransform();
 		FQuat AttitudeVehicleQuat = bodyTransform.GetRotation();
+		// FQuat AttitudeTargetQuat ist the desired rotation
 
-		// Calculate Conjugate since we will use it more often
-		FQuat AttitudeVehicleQuatConj = AttitudeVehicleQuat.Inverse();
-
-		// Calculate Delta between current attitude and target attitude in Body Space
-		FQuat DeltaQuat = AttitudeTargetQuat * AttitudeVehicleQuatConj;
-
-		// for the velocity calculation use the shortest quaternion delta path
-		FQuat DeltaQuatShortest = DeltaQuat;
-		if ( (AttitudeTargetQuat | AttitudeVehicleQuat) < 0 ) // id dot product negative, take other solution
-			DeltaQuatShortest = (AttitudeTargetQuat * -1) * AttitudeVehicleQuatConj;
-
-		// calculate angular velocity between current attitude and target attitude in Body Space
-		//FQuat VelocityQuat = ((DeltaQuatShortest) * 2.0f * DeltaTime) ;
-		//FQuat VelocityQuat = ((DeltaQuatShortest) * 0.5f / DeltaTime) ;
-		FQuat VelocityQuat = ((DeltaQuatShortest * 2) / DeltaTime);
-
-		// ... and make a vector of it in Body Space in rad/s
-		FVector VelocityToApply = FVector(VelocityQuat.X, VelocityQuat.Y, VelocityQuat.Z); 
-		
-		// Transform VelocityToApply into World Space
-		VelocityToApply = bodyTransform.InverseTransformVector(VelocityToApply);
-
-		// Get current angular Velocity in World Space in rad/s
-		FVector BodyAngularVelocityVect = BodyInstance->GetUnrealWorldAngularVelocityInRadians();
-
-		// Calculate ANgular Velocitry Target in World Space
-		FVector BodyAngularVelocityVectTgt = BodyAngularVelocityVect + VelocityToApply;
-
-		// Call the PID-Controllers to find Velocity Targets in rads 
-		FVector PIDVelocityToApply = FVector (
-			RateTargetToMotorRoll(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X),
-			RateTargetToMotorPitch(BodyAngularVelocityVect.Y, BodyAngularVelocityVectTgt.Y),
-			RateTargetToMotorYaw(BodyAngularVelocityVect.Z, BodyAngularVelocityVectTgt.Z)
-		);
-*/
-
-
-
-		// Get current Vehicle Attitude in World Space
-		//FTransform bodyTransform = PrimitiveComponent->GetComponentTransform();
-		//FQuat AttitudeVehicleQuat = bodyTransform.GetRotation();
-		FQuat AttitudeVehicleQuat = PrimitiveComponent->GetComponentQuat();
-
-		// Calculate Conjugate since we will use it more often
-		FQuat AttitudeVehicleQuatConj = AttitudeVehicleQuat.Inverse();
-
-		// Calculate Delta between current attitude and target attitude (Is Relative, means: local space!)
-		FQuat DeltaQuat = AttitudeTargetQuat * AttitudeVehicleQuatConj;
-
-		// for the velocity calculation use the shortest quaternion delta path
-		FQuat DeltaQuatShortest = DeltaQuat;
-		if ( (AttitudeTargetQuat | AttitudeVehicleQuat) < 0 ) // id dot product negative, take other solution
-			DeltaQuatShortest = (AttitudeTargetQuat * -1) * AttitudeVehicleQuatConj;
-				
-		// Normalize the Deltas
+		//q will rotate from our current rotation to desired rotation 
+		float Direction = ((AttitudeTargetQuat | AttitudeVehicleQuat) >= 0) ? 1.0f : -1.0f;
+		FQuat DeltaQuat  = (AttitudeTargetQuat * Direction) * AttitudeVehicleQuat.Inverse(); 
 		DeltaQuat.Normalize();
-		DeltaQuatShortest.Normalize();
-
-		// calculate angular velocity between current attitude and target attitude in Local Space
-		//FQuat VelocityQuat = ((DeltaQuatShortest / DeltaTime) * 2.0f);
-		// ... and make a vector of it in Body Space in rad/s
-		//FVector VelocityToApply = FVector(VelocityQuat.X, VelocityQuat.Y, VelocityQuat.Z); 
 		
-		// Alternative Method with better results:
-		FVector VelocityToApply;
-		FVector DeltaVectorShortest = FVector(DeltaQuatShortest.X, DeltaQuatShortest.Y, DeltaQuatShortest.Z);
-		float Len=DeltaQuatShortest.Size();
-		if(Len <= SMALL_NUMBER)
-		{
-			VelocityToApply = DeltaVectorShortest * 2.0f;
-		}
-		else
-		{
-			float Angle = 2 * FMath::Atan2(Len, DeltaQuatShortest.W);
-			VelocityToApply = DeltaVectorShortest * (Angle / (Len * DeltaTime) );
-		}
-		
-		
-		// Transform VelocityToApply into World  Space
-		//VelocityToApply = bodyTransform.InverseTransformVector(VelocityToApply);
-		VelocityToApply = AttitudeVehicleQuat.UnrotateVector(VelocityToApply);
+		//convert to angle axis representation so we can do math with angular velocity 
+		FVector Axis = FVector::ZeroVector;
+		float Angle = 0.0f;
+		DeltaQuat.ToAxisAndAngle(Axis, Angle); 
+		Axis.Normalize();
 		
 		// Get current angular Velocity in World Space in rad/s
-		FVector BodyAngularVelocityVect = BodyInstance->GetUnrealWorldAngularVelocityInRadians();
+        FVector AngularVelocityNow = BodyInstance->GetUnrealWorldAngularVelocityInRadians();
 
-		// Calculate ANgular Velocitry Target in World Space
-		FVector BodyAngularVelocityVectTgt = BodyAngularVelocityVect + VelocityToApply;
+		//"AngularVelocityTgt" is the angular velocity we need to achieve 
+		FVector AngularVelocityTgt = Axis * Angle / DeltaTime; 
 
-		// Call the PID-Controllers to find Velocity Targets in rads 
-		FVector PIDVelocityToApply = FVector (
-			StepRateRollPid(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X),
-			StepRatePitchPid(BodyAngularVelocityVect.Y, BodyAngularVelocityVectTgt.Y),
-			StepRateYawPid(BodyAngularVelocityVect.Z, BodyAngularVelocityVectTgt.Z)
-		);
-
-		// Rotate Angular Velocity vector into Body Space
-		FVector FinalVelocityToApply = AttitudeVehicleQuat.RotateVector(PIDVelocityToApply);
+		// For Option 1) Calculate the (raw) Velocity we have to apply by taking into account, that we have Velocity allready
+		float MaxVelocity = FMath::DegreesToRadians(AccroRollPitchPGain);
+		FVector AngularVelocityToApply = AngularVelocityTgt - AngularVelocityNow;
+		AngularVelocityToApply = AngularVelocityToApply.GetClampedToSize(-MaxVelocity, MaxVelocity);
 		
-		// Send Calculated Roll Rates in rads to the Engine Controller
-		//EngineController->SetRollRate(FinalVelocityToApply.X);
-		//EngineController->SetPitchRate(FinalVelocityToApply.Y);
-		//EngineController->SetYawRate(FinalVelocityToApply.Z);
+        // For Option 2) Run the PID-Controllers to find PID Angular Velocity to Apply in rads 
+        FVector PIDAngularVelocityToApply = FVector (
+            StepRateRollPid(AngularVelocityNow.X, AngularVelocityTgt.X),
+            StepRatePitchPid(AngularVelocityNow.Y, AngularVelocityTgt.Y),
+            StepRateYawPid(AngularVelocityNow.Z, AngularVelocityTgt.Z)
+        );
 
-		
-
-		
-		// This will be placed in EngineController and/or Simulate
-		//FVector FinalTorque = FinalVelocityToApply; // Because of UE4s units of Torque, we could calibrate here...
-		//BodyInstance->AddTorqueInRadians(FinalTorque, true, true);   
-		//FHitResult Hit = FHitResult();
-		//PrimitiveComponent->MoveComponent(FVector::ZeroVector, DeltaQuat * AttitudeVehicleQuat, false, &Hit, EMoveComponentFlags::MOVECOMP_NoFlags, ETeleportType::TeleportPhysics);
-		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(FinalVelocityToApply, true, NAME_None);
-		
-		//UE_LOG(LogTemp,Display,TEXT("V/PV %f, %f"), VelocityToApply.X, PIDVelocityToApply.X );
-		//UDPDebugOutput = FVector(BodyAngularVelocityVect.X, BodyAngularVelocityVectTgt.X, PIDVelocityToApply.X);
-
-    }
-
-
+		// For Option 3) Run the SPD-Controllers to find DPD Angular Velocity to Apply in rads 
+        FVector SPDAngularVelocityToApply = StepRateRollSpd(AngularVelocityNow, Axis, Angle);
 
 /*
-How to calculate current angular velocity
+		// OPTION #1 Torque with Velocity-Change in rads 
+		//FVector FinalTorque = AngularVelocityToApply; // a) raw
+		//FVector FinalTorque = PIDAngularVelocityToApply; // b) with PIDs
+		FVector FinalTorque = PIDAngularVelocityToApply; // c) with SPDs
+		BodyInstance->AddTorqueInRadians(FinalTorque, true, true);  
+*/
+///*
+		// OPTION #2 Torque with Velocity-Change in rads 
+		// to multiply with inertia tensor local then rotationTensor coords 
+		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);  // a) raw
+		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(PIDAngularVelocityToApply); // b) with PIDs
+		Vector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(PIDAngularVelocityToApply); // b) with PIDs
+		FQuat InertiaTensorRotation = BodyInstance->GetMassSpaceToWorldSpace().GetRotation(); 
+		FVector AngularVelocityLocalInertia = InertiaTensorRotation * AngularVelocityLocal; 
+		AngularVelocityLocalInertia *= BodyInstance->GetBodyInertiaTensor(); 
+		FVector TorqueLocal = InertiaTensorRotation.Inverse() * AngularVelocityLocalInertia; 
+		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(TorqueLocal); 
+		BodyInstance->AddTorqueInRadians(TorqueWorld, true, false);  
+//*/		
+	}
 
-FQuat Orientation = GetComponentQuat();
-	FQuat DeltaQ = OldOrientation.Inverse() * Orientation;
-	FVector Axis;
-	float Angle;
-	DeltaQ.ToAxisAndAngle(Axis, Angle);
-	Angle = FMath::RadiansToDegrees(Angle);
-	AngularVelocity = Orientation.RotateVector((Axis * Angle) / DeltaTime);
-	OldOrientation = Orientation;
 
-	*/
+	FVector3 StepRateRollSpd(FVector Now, FVector Axis, float Angle)
+	{
+		float kp = (6.0f * SPDFrequency) * (6.0f * SPDFrequency)* 0.25f; 
+		float kd = 4.5f * SPDFrequency * SPDDamping; 
+		float dt = DeltaTime; 
+		float g = 1.0f / (1.0f + kd * dt + kp * dt * dt); 
+		float ksg = kp * g; 
+		float kdg = (kd + kp * dt) * g; 
 
+		return FVector(kp * axis * Angle - kd * Now);
+	}
 
 
 	// Run the roll angular velocity PID controller and return the output in rads

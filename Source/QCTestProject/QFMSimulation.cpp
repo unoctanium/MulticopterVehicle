@@ -9,7 +9,7 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
     if (DeltaTime <= 0.0f) { return; }
 
 	//double start = FPlatformTime::Seconds();
-	UE_LOG(LogTemp, Warning, TEXT("timestamp %f"), FPlatformTime::Seconds());
+	//UE_LOG(LogTemp, Warning, TEXT("timestamp %f"), FPlatformTime::Seconds());
 
 
 	// read new Pilot Input
@@ -30,6 +30,7 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
 	// And Apply Forces calculated in Engine Control
 	//AddLocalForceZ(EngineController.GetTotalThrust());
 	//AddLocalTorqueRad(EngineController.GetTotalTorque());
+
 
     #ifdef WITH_EDITOR
     

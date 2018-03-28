@@ -616,7 +616,7 @@ struct FAttitudeController
 		// to multiply with inertia tensor local then rotationTensor coords 
 		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);  // a) raw
 		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(PIDAngularVelocityToApply); // b) with PIDs
-		Vector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(SPDAngularVelocityToApply); // c) with PIDs
+		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(SPDAngularVelocityToApply); // c) with PIDs
 		FQuat InertiaTensorRotation = BodyInstance->GetMassSpaceToWorldSpace().GetRotation(); 
 		FVector AngularVelocityLocalInertia = InertiaTensorRotation * AngularVelocityLocal; 
 		AngularVelocityLocalInertia *= BodyInstance->GetBodyInertiaTensor(); 

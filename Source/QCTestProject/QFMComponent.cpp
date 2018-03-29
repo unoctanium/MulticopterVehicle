@@ -11,7 +11,7 @@ UQuadcopterFlightModel::UQuadcopterFlightModel()
 
 	OnCalculateCustomPhysics.BindUObject(this, &UQuadcopterFlightModel::CustomPhysics);
 	SetTickGroup(ETickingGroup::TG_PrePhysics);
-	
+
 }
 
 

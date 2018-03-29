@@ -56,7 +56,7 @@ USTRUCT(BlueprintType)
 struct FEngineController
 {
 	GENERATED_BODY()
-
+/*
 	UPROPERTY() 
 	float RollRequest; // -1..1
 
@@ -65,6 +65,10 @@ struct FEngineController
 
 	UPROPERTY() 
 	float YawRequest; // -1..1
+*/
+
+	UPROPERTY() 
+	FVector RotationRequest; // -1..1 or MaxRates???????
 
 	UPROPERTY() 
 	float ThrottleRequest; // 0..1
@@ -155,6 +159,9 @@ struct FEngineController
 	{
 		DeltaTime = DeltaTimeIn;
 		
+		// Keep Throttle RPY Mix in a good range
+		UpdateThrottleRPYMix();
+
 		// Mix Pilot Input to meet Frame Mode 
 		MixEngines();
 	
@@ -163,6 +170,9 @@ struct FEngineController
 
 		// Calculate new Forces
 		GetEngineForces();
+
+		//PrimitiveComponent->SetPhysicsAngularVelocityInRadians(TotalTorque, true, NAME_None);
+
 	}
 
 	
@@ -234,9 +244,9 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
-				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
-				EngineTorque.Z += MixerQuadCross[i].Yaw * SpeedToTorque[i] * Engine_B;
+				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
+				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
+				EngineTorque.Z += MixerQuadCross[i].Yaw * SpeedToTorque[i] * Engine_B / 2000.0f;
 			}
 
 		}
@@ -244,9 +254,10 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
-				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 10.0f;
-				EngineTorque.Z += MixerQuadPlus[i].Yaw * SpeedToTorque[i] * Engine_B;
+				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
+				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
+				EngineTorque.Z += MixerQuadPlus[i].Yaw * SpeedToTorque[i] * Engine_B / 2000.0f
+				;
 			}
 
 		}
@@ -348,26 +359,32 @@ struct FEngineController
 	}
 
 
+/*
 	// Set Roll -1..1
-	void SetRoll(float ValueIn)
+	void SetRollRate(float ValueIn)
 	{
 		RollRequest = ValueIn;
 	}
 
 
 	// Set Pitch -1..1
-	void SetPitch(float ValueIn)
+	void SetPitchRate(float ValueIn)
 	{
 		PitchRequest = ValueIn;
 	}
 
 
 	// Set Yaw -1..1
-	void SetYaw(float ValueIn)
+	void SetYawRate(float ValueIn)
 	{
 		YawRequest = ValueIn;
 	}
+*/
 
+	void SetRotationRates(FVector inValue)
+	{
+		RotationRequest = inValue;
+	}
 
 	bool IsLimitRollPitch()
 	{
@@ -408,16 +425,14 @@ struct FEngineController
 	void MixEngines() 
 	{
 
-		FVector4 DesiredPilotInput = FVector4(RollRequest, PitchRequest, YawRequest, ThrottleRequest );
-
 		if (Vehicle->FrameMode == EFrameMode::FrameModeCross)
 		{
 			for (int i = 0; i < 4; i++) {
 				EngineMixPercent[i] = (
-					DesiredPilotInput.W * MixerQuadCross[i].Throttle +
-					DesiredPilotInput.X * MixerQuadCross[i].Roll +
-					DesiredPilotInput.Y * MixerQuadCross[i].Pitch +
-					DesiredPilotInput.Z * MixerQuadCross[i].Yaw
+					ThrottleRequest   * MixerQuadCross[i].Throttle +
+					RotationRequest.X * MixerQuadCross[i].Roll +
+					RotationRequest.Y * MixerQuadCross[i].Pitch +
+					RotationRequest.Z * MixerQuadCross[i].Yaw
 					);
 				
 			}
@@ -426,10 +441,10 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++) {
 				EngineMixPercent[i] = (
-					DesiredPilotInput.W * MixerQuadPlus[i].Throttle +
-					DesiredPilotInput.X * MixerQuadPlus[i].Roll +
-					DesiredPilotInput.Y * MixerQuadPlus[i].Pitch +
-					DesiredPilotInput.Z * MixerQuadPlus[i].Yaw
+					ThrottleRequest     * MixerQuadPlus[i].Throttle +
+					RotationRequest.X * MixerQuadPlus[i].Roll +
+					RotationRequest.Y * MixerQuadPlus[i].Pitch +
+					RotationRequest.Z * MixerQuadPlus[i].Yaw
 					);
 			}
 		}
@@ -466,6 +481,12 @@ struct FEngineController
 		
 	}
 
+
+	// Update Throttle Mix to stay in controllable range
+	void UpdateThrottleRPYMix()
+	{
+
+	}
 
 
 	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)

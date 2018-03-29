@@ -83,30 +83,6 @@ struct FAttitudeController
 	float FPDFrequency = 0.15f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID P"))
-<<<<<<< HEAD
-	float RateRollP = 50.0f;//0.15f;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID I"))
-	float RateRollI = 40.0f;//0.1f;
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID D"))
-	float RateRollD = 50.0f;//0.004f;
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID P"))
-	float RatePitchP = 5.0f;//0.15f;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID I"))
-	float RatePitchI = 40.0f;//0.1f;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID D"))
-	float RatePitchD = 50.0f;//0.004f;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID P"))
-	float RateYawP = 5.0f;//0.02f;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID I"))
-	float RateYawI = 40.0f;//0.02f;
-=======
 	float RateRollP = 0.001;//0.004f;//4.0f;//0.15f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID I"))
@@ -129,7 +105,6 @@ struct FAttitudeController
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID I"))
 	float RateYawI = 0.0005;//0.004f;//0.2f;//0.02f;
->>>>>>> ae9586b632d96de2fd67255894e870121b1432c0
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID D"))
 	float RateYawD = 0.1f;//0.4f;//0.0f;

@@ -18,6 +18,17 @@ enum class EFlightMode : uint8
 };
 
 
+/*--- Structure to hold Rate Stabilizers that are supported by AttitudeController  ---*/
+UENUM(BlueprintType)                 
+enum class EControlLoop : uint8
+{
+	ControlLoop_None			UMETA(DisplayName = "Dont use Stabilizer"),
+	ControlLoop_PID			UMETA(DisplayName = "PID Controller"),
+	ControlLoop_FPD			UMETA(DisplayName = "Forward PD Controller")
+};
+
+
+
 // Enumeration of supported Frame Types
 UENUM(BlueprintType)
 enum class EFrameMode : uint8

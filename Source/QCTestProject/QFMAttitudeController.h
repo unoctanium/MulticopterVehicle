@@ -73,35 +73,38 @@ struct FAttitudeController
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "deadzone in % (0..1) up and % down from center")) 
 	float ThrottleDeadzone = 0.1f;   
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "SPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
-	float SPDDamping = 1.0f;	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Stabilizer-Loop to use for Rotations")) 
+	EControlLoop RotationControlLoop = EControlLoop::ControlLoop_FPD;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "SPD Frequency. Reach 95% of target in 1/Freq secs"))
-	float SPDFrequency = 6.0f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
+	float FPDDamping = 5.0f;	
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Frequency. Reach 95% of target in 1/Freq secs"))
+	float FPDFrequency = 0.15f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID P"))
-	float RateRollP = 0.004f;//4.0f;//0.15f;
+	float RateRollP = 0.001;//0.004f;//4.0f;//0.15f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID I"))
-	float RateRollI = 0.004f;//0.2f;//0.1f;
+	float RateRollI = 0.0005;//0.004f;//0.2f;//0.1f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID D"))
 	float RateRollD = 0.1f;//0.4f;//0.004f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID P"))
-	float RatePitchP = 0.004f;//4.0f;//0.15f;
+	float RatePitchP = 0.001;//0.004f;//4.0f;//0.15f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID I"))
-	float RatePitchI = 0.004f;//0.2f;//0.1f;
+	float RatePitchI = 0.0005;//0.004f;//0.2f;//0.1f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID D"))
 	float RatePitchD = 0.1f;//0.4f;//0.004f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID P"))
-	float RateYawP = 0.004f;//4.0f;//0.02f;
+	float RateYawP = 0.01;//0.004f;//4.0f;//0.02f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID I"))
-	float RateYawI = 0.004f;//0.2f;//0.02f;
+	float RateYawI = 0.0005;//0.004f;//0.2f;//0.02f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID D"))
 	float RateYawD = 0.1f;//0.4f;//0.0f;
@@ -113,7 +116,6 @@ struct FAttitudeController
 
 	// Targets
 	UPROPERTY() FQuat AttitudeTargetQuat;
-	UPROPERTY() FVector AttitudeTargetAngVel;
 
 	// PIDs
 	UPROPERTY() FPIDController RateRollPid;
@@ -179,8 +181,8 @@ struct FAttitudeController
 	void Reset()
 	{
 		// Reset Quats
-		AttitudeTargetQuat = AHRS->GetWorldRotationQuat(); //		FQuat(FRotator(AHRS->BodyRotation.GetInverse())); // in degs
-		AttitudeTargetAngVel = AHRS->GetBodyAngularVelocityVect(); // in deg/s
+		FTransform bodyTransform =  BodyInstance->GetUnrealWorldTransform();
+		AttitudeTargetQuat = bodyTransform.GetRotation();
 	
 		// ResetPids
 		RateRollPid.Reset();
@@ -276,10 +278,7 @@ struct FAttitudeController
 		float ThrottleScaled;
 		ThrottleScaled = GetPilotDesiredThrottle(PilotInput.W);
 		EngineController->SetThrottleOut(ThrottleScaled);
-		
-		EngineController->SetRollRate(PilotInput.X);
-		EngineController->SetPitchRate(PilotInput.Y);
-		EngineController->SetYawRate(PilotInput.Z);
+		EngineController->SetRotationRates(PilotInput);
 	}
 
 
@@ -342,7 +341,6 @@ struct FAttitudeController
 
 	/*--- CALCULATE PILOTs DESIRE ---*/
 
-
 	// GetPilotDesiredLeanAngles - transform pilot's roll or pitch input into a desired lean angle 
 	// returns desired angles in degrees 
 	void GetPilotDesiredLeanAngles(float RollIn, float PitchIn, float &RollOut, float &PitchOut)
@@ -389,11 +387,6 @@ struct FAttitudeController
 			PitchIn *= ratio;
 		}
 
-		// calculate roll, pitch rate requests 
-		//if (AccroRollPitchExpo <= 0) { 
-		//    RollOut = RollIn * AccroRollPitchPGain; 
-		//    PitchOut = PitchIn * AccroRollPitchPGain; 
-		//} else { 
 		// expo variables 
 		float RPIn3, RPOut;
 
@@ -426,10 +419,6 @@ struct FAttitudeController
 	{
 		float YawRequest;
 
-		// calculate yaw rate request 
-		//if (AccroYawExpo <= 0) { 
-		//    YawRequest = YawIn * YawPGain; 
-		//} else { 
 		// expo variables 
 		float YawIn3, YawOut;
 
@@ -440,7 +429,7 @@ struct FAttitudeController
 		YawIn3 = YawIn * YawIn * YawIn;
 		YawOut = (AccroYawExpo * YawIn3) + ((1.0f - AccroYawExpo) * YawIn);
 		YawRequest = YawOut * YawPGain;
-		//} 
+	
 		// convert pilot input to the desired yaw rate 
 		return YawRequest;
 	}
@@ -517,10 +506,7 @@ struct FAttitudeController
 
 
 
-
-
 	/*--- INPUT FUNCTIONS: INPUT DATA INTO FLIGHT CONTROLLER ---*/
-
 
 	// Command an angular roll, pitch and rate yaw with angular velocity feedforward 
 	void InputAngleRollPitchRateYaw(float RollIn, float PitchIn, float YawRateIn)
@@ -534,12 +520,7 @@ struct FAttitudeController
 
 		// Compute quaternion target attitude for roll and pitch
 		AttitudeTargetQuat = FQuat(AttitudeTargetRotator);
-
-		// add rate yaw and fall thru
-		//InputRateBodyRollPitchYaw(0.0f, 0.0f, YawRateIn);
-
-		// Set rate feedforward requests to zero 
-		AttitudeTargetAngVel = FVector(0.0f, 0.0f, 0.0f);
+		AttitudeTargetQuat.Normalize();
 
 		// Call quaternion attitude controller
 		RunQuat();
@@ -555,9 +536,6 @@ struct FAttitudeController
 		
 		AttitudeTargetQuat = AttitudeTargetQuat * AttitudeTargetUpdateQuat;
 		AttitudeTargetQuat.Normalize();
-
-		// Set rate feedforward requests to zero 
-		AttitudeTargetAngVel = FVector(0.0f, 0.0f, 0.0f);
 
 		// Call quaternion attitude controller
 		RunQuat();
@@ -586,37 +564,66 @@ struct FAttitudeController
 		// Get current angular Velocity in World Space in rad/s
         FVector AngularVelocityNow = BodyInstance->GetUnrealWorldAngularVelocityInRadians();
 
-		//"AngularVelocityTgt" is the angular velocity we need to achieve 
+		// AngularVelocityTgt is the w we need to achieve 
 		FVector AngularVelocityTgt = Axis * Angle / DeltaTime; 
+UE_LOG(LogTemp,Display,TEXT("AVT %f"), FMath::RadiansToDegrees(AngularVelocityTgt.X));
+		// I must inspect this strange behaviour (slow rotation) with PID Loop and Stabilize Mode
+		// This is dysfunctional!!!
+		//if (RotationControlLoop == EControlLoop::ControlLoop_PID && FlightMode == EFlightMode::FM_Stabilize)
+		//{
+		//	AngularVelocityTgt *= 10000;
+		//}
 
-		// For Option 1) Calculate the (raw) Velocity we have to apply by taking into account, that we have Velocity allready
-		float MaxVelocity = FMath::DegreesToRadians(AccroRollPitchPGain);
-		FVector AngularVelocityToApply = AngularVelocityTgt - AngularVelocityNow;
-		AngularVelocityToApply = AngularVelocityToApply.GetClampedToSize(-MaxVelocity, MaxVelocity);
+		// AngularVelocityToApply is the w we need to Apply to physx directly or after torque calculation
+		FVector AngularVelocityToApply = FVector::ZeroVector;
 		
-        // For Option 2) Run the PID-Controllers to find PID Angular Velocity to Apply in rads 
-        FVector PIDAngularVelocityToApply = FVector (
+		// AngularVelocityToApply depends on the choosen ControlLoop
+		if(RotationControlLoop == EControlLoop::ControlLoop_None)
+		{
+			// For Option a) Calculate the (raw) Velocity we have to apply by taking into account, that we have Velocity allready
+			AngularVelocityToApply = AngularVelocityTgt - AngularVelocityNow;
+		}
+		else if (RotationControlLoop == EControlLoop::ControlLoop_PID)
+		{
+			// For Option b) Run the PID-Controllers to find PID Angular Velocity to Apply in rads 
+			AngularVelocityToApply = FVector (
             StepRateRollPid(AngularVelocityNow.X, AngularVelocityTgt.X),
             StepRatePitchPid(AngularVelocityNow.Y, AngularVelocityTgt.Y),
             StepRateYawPid(AngularVelocityNow.Z, AngularVelocityTgt.Z)
         );
+		}
+		else if (RotationControlLoop == EControlLoop::ControlLoop_FPD)
+		{
+			// For Option c) Run the FPD-Controllers to find DPD Angular Velocity to Apply in rads 
+    	    AngularVelocityToApply = StepRateRollFpd( AngularVelocityTgt, AngularVelocityNow);
+		}
 
-		// For Option 3) Run the SPD-Controllers to find DPD Angular Velocity to Apply in rads 
-        FVector SPDAngularVelocityToApply = StepRateRollSpd(AngularVelocityNow, Axis, Angle);
+		// We clamp Angular Velocity to the requested max
+		float MaxRPVelocityRad = FMath::DegreesToRadians(AccroRollPitchPGain);
+		float MaxYVelocityRad = FMath::DegreesToRadians(YawPGain);
+		AngularVelocityToApply.X = FMath::Clamp(AngularVelocityToApply.X, -MaxRPVelocityRad, MaxRPVelocityRad);
+		AngularVelocityToApply.Y = FMath::Clamp(AngularVelocityToApply.Y, -MaxRPVelocityRad, MaxRPVelocityRad);
+		AngularVelocityToApply.Z = FMath::Clamp(AngularVelocityToApply.Z, -MaxYVelocityRad, MaxYVelocityRad);
 
 /*
-		// OPTION #1 Torque with Velocity-Change in rads 
-		//FVector FinalTorque = AngularVelocityToApply; // a) raw
-		//FVector FinalTorque = PIDAngularVelocityToApply; // b) with PIDs
-		FVector FinalTorque = SPDAngularVelocityToApply; // c) with SPDs
-		BodyInstance->AddTorqueInRadians(FinalTorque, true, true);  
+		// OPTION #0: This is going to be the future code here. Options 1..3 will move to EngineController.h or Simulate.h
+		// Send Calculated Roll Rates in rads to the Engine Controller
+        EngineController->SetRotationRates(AngularVelocityToApply);
+*/
+
+/*
+		// OPTION #1: Set Velocity in Physx directy (not recommended). Use only withot StabilizerLoop (RotationControlLoop = EControlLoop::ControlLoop_None)
+		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(AngularVelocityToApply, true, NAME_None);
+*/
+
+/*
+		// OPTION #2: Simulate Torque by Velocity-Change in rads, dont care about Inertia, mass etc.
+		BodyInstance->AddTorqueInRadians(AngularVelocityToApply, true, true);  
 */
 ///*
-		// OPTION #2 Torque with Velocity-Change in rads 
+		// OPTION #3: Apply Torque force from Velocity-Change in rads 
 		// to multiply with inertia tensor local then rotationTensor coords 
-		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);  // a) raw
-		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(PIDAngularVelocityToApply); // b) with PIDs
-		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(SPDAngularVelocityToApply); // c) with PIDs
+		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);  // a) raw
 		FQuat InertiaTensorRotation = BodyInstance->GetMassSpaceToWorldSpace().GetRotation(); 
 		FVector AngularVelocityLocalInertia = InertiaTensorRotation * AngularVelocityLocal; 
 		AngularVelocityLocalInertia *= BodyInstance->GetBodyInertiaTensor(); 
@@ -624,19 +631,23 @@ struct FAttitudeController
 		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(TorqueLocal); 
 		BodyInstance->AddTorqueInRadians(TorqueWorld, true, false);  
 //*/		
+
+
+
+
 	}
 
-
-	FVector StepRateRollSpd(FVector Now, FVector Axis, float Angle)
+	// Run the rotational angular velocity FPD controller and return the output in rads
+	FVector StepRateRollFpd(FVector DeltaQ, FVector DeltaQDot)
 	{
-		float kp = (6.0f * SPDFrequency) * (6.0f * SPDFrequency)* 0.25f; 
-		float kd = 4.5f * SPDFrequency * SPDDamping; 
+		float kp = FPDFrequency * FPDFrequency * 9.0f; 
+		float kd = 4.5f * FPDFrequency * FPDDamping; 
 		float dt = DeltaTime; 
 		float g = 1.0f / (1.0f + kd * dt + kp * dt * dt); 
 		float ksg = kp * g; 
 		float kdg = (kd + kp * dt) * g; 
 
-		return FVector(kp * Axis * Angle - kd * Now);
+		return FVector(kp * DeltaQ - kd * DeltaQDot);
 	}
 
 
@@ -663,12 +674,6 @@ struct FAttitudeController
 		float RateTargetNorm = RateTargetRads / FMath::DegreesToRadians(YawPGain);
 		return RateYawPid.Calculate(RateTargetNorm, RateActualNorm, DeltaTime) * FMath::DegreesToRadians(YawPGain);
 	} 
-
-	void UpdateThrottleRPYMix()
-	{
-
-	}
-
 
 	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)
 	{

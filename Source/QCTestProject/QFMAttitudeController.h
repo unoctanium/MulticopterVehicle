@@ -74,28 +74,28 @@ struct FAttitudeController
 	float ThrottleDeadzone = 0.1f;   
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID P"))
-	float RateRollP = 10.0f;//0.15f;
+	float RateRollP = 50.0f;//0.15f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID I"))
-	float RateRollI = 1.0f;//0.1f;
+	float RateRollI = 40.0f;//0.1f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID D"))
-	float RateRollD = 5.0f;//0.004f;
+	float RateRollD = 50.0f;//0.004f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID P"))
-	float RatePitchP = 10.0f;//0.15f;
+	float RatePitchP = 5.0f;//0.15f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID I"))
-	float RatePitchI = 1.0f;//0.1f;
+	float RatePitchI = 40.0f;//0.1f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID D"))
-	float RatePitchD = 5.0f;//0.004f;
+	float RatePitchD = 50.0f;//0.004f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID P"))
-	float RateYawP = 10.0f;//0.02f;
+	float RateYawP = 5.0f;//0.02f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID I"))
-	float RateYawI = 1.0f;//0.02f;
+	float RateYawI = 40.0f;//0.02f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID D"))
 	float RateYawD = 5.0f;//0.0f;
@@ -159,9 +159,9 @@ struct FAttitudeController
 		EngineController = EngineControllerIn;
 
 		// Init Pids with min,max = -1..1. We normalize velocities in RunQuat(). So we allways have the same PID-Settinghs, regardeless of Max Rates
-		RateRollPid.Init(-1, 1, RateRollP, RateRollI, RateRollD);
-		RatePitchPid.Init(-1, 1, RatePitchP, RatePitchI, RatePitchD);
-		RateYawPid.Init(-1, 1, RateYawP, RateYawI, RateYawD);
+		RateRollPid.Init(-2, 2, RateRollP, RateRollI, RateRollD);
+		RatePitchPid.Init(-2, 2, RatePitchP, RatePitchI, RatePitchD);
+		RateYawPid.Init(-2, 2, RateYawP, RateYawI, RateYawD);
 
 		Reset();
 

@@ -553,6 +553,24 @@ struct FAttitudeController
 		//q will rotate from our current rotation to desired rotation 
 		float Direction = ((AttitudeTargetQuat | AttitudeVehicleQuat) >= 0) ? 1.0f : -1.0f;
 		FQuat DeltaQuat  = (AttitudeTargetQuat * Direction) * AttitudeVehicleQuat.Inverse(); 
+
+
+
+		// I must inspect this strange behaviour (slow rotation) if I just use 
+		// AngularVelocityTgt from above with PID Loop and Stabilize Mode active
+		// Until then, I use this code to correct everything
+		// !!!THIS IS DISFUNCTIONAL
+		if (RotationControlLoop == EControlLoop::ControlLoop_PID && FlightMode == EFlightMode::FM_Stabilize)
+		{
+			FVector AttFromThrustVector = AttitudeVehicleQuat.GetUpVector(); 
+			FVector AttToThrustVector = AttitudeTargetQuat.GetUpVector(); 
+         	FQuat ThrustVectorCorrectionQuat = FQuat::FindBetween(AttFromThrustVector, AttToThrustVector); 
+			ThrustVectorCorrectionQuat = ThrustVectorCorrectionQuat * AttitudeVehicleQuat; 
+			DeltaQuat = ThrustVectorCorrectionQuat;
+		}
+
+
+
 		DeltaQuat.Normalize();
 		
 		//convert to angle axis representation so we can do math with angular velocity 
@@ -566,13 +584,6 @@ struct FAttitudeController
 
 		// AngularVelocityTgt is the w we need to achieve 
 		FVector AngularVelocityTgt = Axis * Angle / DeltaTime; 
-UE_LOG(LogTemp,Display,TEXT("AVT %f"), FMath::RadiansToDegrees(AngularVelocityTgt.X));
-		// I must inspect this strange behaviour (slow rotation) with PID Loop and Stabilize Mode
-		// This is dysfunctional!!!
-		//if (RotationControlLoop == EControlLoop::ControlLoop_PID && FlightMode == EFlightMode::FM_Stabilize)
-		//{
-		//	AngularVelocityTgt *= 10000;
-		//}
 
 		// AngularVelocityToApply is the w we need to Apply to physx directly or after torque calculation
 		FVector AngularVelocityToApply = FVector::ZeroVector;
@@ -616,11 +627,11 @@ UE_LOG(LogTemp,Display,TEXT("AVT %f"), FMath::RadiansToDegrees(AngularVelocityTg
 		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(AngularVelocityToApply, true, NAME_None);
 */
 
-/*
+///*
 		// OPTION #2: Simulate Torque by Velocity-Change in rads, dont care about Inertia, mass etc.
 		BodyInstance->AddTorqueInRadians(AngularVelocityToApply, true, true);  
-*/
-///*
+//*/
+/*
 		// OPTION #3: Apply Torque force from Velocity-Change in rads 
 		// to multiply with inertia tensor local then rotationTensor coords 
 		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);  // a) raw
@@ -630,8 +641,20 @@ UE_LOG(LogTemp,Display,TEXT("AVT %f"), FMath::RadiansToDegrees(AngularVelocityTg
 		FVector TorqueLocal = InertiaTensorRotation.Inverse() * AngularVelocityLocalInertia; 
 		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(TorqueLocal); 
 		BodyInstance->AddTorqueInRadians(TorqueWorld, true, false);  
-//*/		
+*/	
 
+/*
+		// I must inspect this strange behaviour (slow rotation) if I just use 
+		// AngularVelocityTgt from above with PID Loop and Stabilize Mode active
+		// Until then, I use this code to correct everything
+		// !!!THIS IS DISFUNCTIONAL
+		if (RotationControlLoop == EControlLoop::ControlLoop_PID && FlightMode == EFlightMode::FM_Stabilize)
+		{
+			FVector FinalLocalTorque = PrimitiveComponent->GetComponentQuat().RotateVector(AngularVelocityToApply);	
+			FinalLocalTorque *= 2000000;
+			BodyInstance->AddTorqueInRadians(FinalLocalTorque, false, false);   
+		}			
+*/
 
 
 

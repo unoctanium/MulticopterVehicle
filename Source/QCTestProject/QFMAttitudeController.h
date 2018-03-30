@@ -76,39 +76,28 @@ struct FAttitudeController
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Stabilizer-Loop to use for Rotations")) 
 	EControlLoop RotationControlLoop = EControlLoop::ControlLoop_FPD;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY SPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
+	FVector SPDDamping = FVector(1.0f, 1.0f, 1.0f);
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY SPD Frequency. Reach 95% of target in 1/Freq secs"))
+	FVector SPDFrequency = FVector(0.6f, 0.6f, 0.6f);
+
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
 	float FPDDamping = 5.0f;	
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Frequency. Reach 95% of target in 1/Freq secs"))
-	float FPDFrequency = 0.15f;
+	float FPDFrequency = 0.1f;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID P"))
-	float RateRollP = 0.001;//0.004f;//4.0f;//0.15f;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID I"))
-	float RateRollI = 0.0005;//0.004f;//0.2f;//0.1f;
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID D"))
-	float RateRollD = 0.1f;//0.4f;//0.004f;
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID P"))
-	float RatePitchP = 0.001;//0.004f;//4.0f;//0.15f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY Rate PID P"))
+	FVector RatePidP = FVector(0.001, 0.001, 0.001);
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID I"))
-	float RatePitchI = 0.0005;//0.004f;//0.2f;//0.1f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY Rate PID I"))
+	FVector RatePidI = FVector(0.0005, 0.0005, 0.0005);
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID D"))
-	float RatePitchD = 0.1f;//0.4f;//0.004f;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID P"))
-	float RateYawP = 0.01;//0.004f;//4.0f;//0.02f;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID I"))
-	float RateYawI = 0.0005;//0.004f;//0.2f;//0.02f;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID D"))
-	float RateYawD = 0.1f;//0.4f;//0.0f;
-
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY Rate PID D"))
+	FVector RatePidD = FVector(0.1, 0.1, 0.1);
 
 
 	
@@ -167,9 +156,9 @@ struct FAttitudeController
 		EngineController = EngineControllerIn;
 
 		// Init Pids with min,max = -1..1. We normalize velocities in RunQuat(). So we allways have the same PID-Settinghs, regardeless of Max Rates
-		RateRollPid.Init(-2, 2, RateRollP, RateRollI, RateRollD);
-		RatePitchPid.Init(-2, 2, RatePitchP, RatePitchI, RatePitchD);
-		RateYawPid.Init(-2, 2, RateYawP, RateYawI, RateYawD);
+		RateRollPid.Init(-2, 2, RatePidP.X, RatePidI.X, RatePidD.X);
+		RatePitchPid.Init(-2, 2, RatePidP.Y, RatePidI.Y, RatePidD.Y);
+		RateYawPid.Init(-2, 2, RatePidP.Z, RatePidI.Z, RatePidD.Z);
 
 		Reset();
 
@@ -660,18 +649,40 @@ struct FAttitudeController
 
 	}
 
-	// Run the rotational angular velocity FPD controller and return the output in rads
+	// Run the rotational angular velocity FPD controller and return the output detla w in rads
 	FVector StepRateRollFpd(FVector DeltaQ, FVector DeltaQDot)
 	{
 		float kp = FPDFrequency * FPDFrequency * 9.0f; 
 		float kd = 4.5f * FPDFrequency * FPDDamping; 
 		float dt = DeltaTime; 
+		
 		float g = 1.0f / (1.0f + kd * dt + kp * dt * dt); 
-		float ksg = kp * g; 
+		float kpg = kp * g; 
 		float kdg = (kd + kp * dt) * g; 
 
-		return FVector(kp * DeltaQ - kd * DeltaQDot);
+		//return FVector(kp * DeltaQ - kd * DeltaQDot);
+		return FVector(kpg * DeltaQ - kdg * DeltaQDot);
 	}
+
+
+	// Run the rotational angular velocity SPD controller and return the output delta w in rads
+	FVector StepRateRollSpd(FVector CurrentAttitude, FVector CurrentVelocity, FVector TargetAttitude, FVector InertiaTensor)
+	{
+		FVector kp = SPDFrequency * SPDFrequency * 9.0f; 
+		FVector kd = 4.5f * SPDFrequency * SPDDamping; 
+		float dt = DeltaTime; 
+		FVector I = InertiaTensor;
+		FVector g = FVector (
+			1.0f / (I.X + kd.X * dt), 
+			1.0f / (I.Y + kd.Y * dt), 
+			1.0f / (I.Z + kd.Z * dt) 
+		);
+		FVector kpg = -g * kp; 
+		FVector kdg = -g * kd;
+
+		return FVector(kpg * (CurrentAttitude + CurrentVelocity*dt - TargetAttitude) + kdg * CurrentVelocity) *dt; // dt nötig hier??)
+	}
+
 
 
 	// Run the roll angular velocity PID controller and return the output in rads

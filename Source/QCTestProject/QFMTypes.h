@@ -24,7 +24,8 @@ enum class EControlLoop : uint8
 {
 	ControlLoop_None			UMETA(DisplayName = "Dont use Stabilizer"),
 	ControlLoop_PID			UMETA(DisplayName = "PID Controller"),
-	ControlLoop_FPD			UMETA(DisplayName = "Forward PD Controller")
+	ControlLoop_FPD			UMETA(DisplayName = "Forward PD Controller"),
+	ControlLoop_SPD			UMETA(DisplayName = "Stable PD Controller")
 };
 
 

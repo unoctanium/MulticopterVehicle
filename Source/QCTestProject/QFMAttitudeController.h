@@ -500,31 +500,41 @@ struct FAttitudeController
 	// Command an angular roll, pitch and rate yaw with angular velocity feedforward 
 	void InputAngleRollPitchRateYaw(float RollIn, float PitchIn, float YawRateIn)
 	{
+		//
+		// Rotate Target around Yaw Rate Quat
+		//
+		
+		//Yaw Rate World Rotation increment
+		FRotator YawRateRotator = FRotator(0.0, YawRateIn * DeltaTime, 0.0f);
+		YawRateRotator = YawRateRotator.Clamp();
+		FQuat YawRateUpdateQuat = FQuat(YawRateRotator);
+		// Rotate for Yaw around World (z) axis
+		AttitudeTargetQuat = YawRateUpdateQuat * AttitudeTargetQuat;
+		// .. and update Attitude Target
+		AttitudeTargetQuat.Normalize();
 
-
-
+		//
 		// Rotate towards RollIn, PitchIn with <= MaxSpeed
+		//
 
+		//  Calculate desired Attitude from Roll and pitch angles
 		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
 		AttitudeTargetRotator.Roll = RollIn;
 		AttitudeTargetRotator.Pitch = PitchIn;
-		AttitudeTargetRotator.Yaw = 0 ;
+		AttitudeTargetRotator.Yaw = AttitudeTargetQuat.Rotator().Yaw ;
 		AttitudeTargetRotator = AttitudeTargetRotator.Clamp();
-
-		// Compute quaternion target attitude for roll and pitch
+		// Compute quaternion target attitude
 		FQuat AttitudeDesiredTargetQuat = FQuat(AttitudeTargetRotator);
-		//AttitudeDesiredTargetQuat.Normalize();
+		AttitudeDesiredTargetQuat.Normalize();
 
-		// Get vehicles current orientation
-		FTransform bodyTransform =  BodyInstance->GetUnrealWorldTransform();
-		FQuat AttitudeVehicleQuat = bodyTransform.GetRotation();
-		
-		// Get Delta Rot and Limit Rota Speed to AccroRollPitchPGain
-		float Direction = ((AttitudeDesiredTargetQuat | AttitudeVehicleQuat) >= 0) ? 1.0f : -1.0f;
-		FQuat DeltaQuat  = (AttitudeDesiredTargetQuat * Direction) * AttitudeVehicleQuat.Inverse(); 
+		// Speed limit the rotation from Targe Attitude to new desired target Attitude
+
+		// 1.) Get shortest arc Delta Rot and Limit Rota Speed to AccroRollPitchPGain
+		float Direction = ((AttitudeDesiredTargetQuat | AttitudeTargetQuat) >= 0) ? 1.0f : -1.0f;
+		FQuat DeltaQuat  = (AttitudeDesiredTargetQuat * Direction) * AttitudeTargetQuat.Inverse(); 
 		DeltaQuat.Normalize();
-UE_LOG(LogTemp,Display,TEXT("D1 %s "),*DeltaQuat.ToString());		
-		// Calc  Desired Velocity
+
+		// 2.) Calc  Desired Velocity for Delta Rot from 1)
 		
 		//convert to angle axis representation so we can do math with angular velocity 
 		FVector Axis = FVector::ZeroVector;
@@ -537,33 +547,18 @@ UE_LOG(LogTemp,Display,TEXT("D1 %s "),*DeltaQuat.ToString());
 
 		// We speed limit the velocity
 		float ClampedAngle = FMath::Clamp(Angle, 0.0f, MaxRPVelocityRads);
-
 		// Recreate DeltaQuat, now with limited speed
 		DeltaQuat = FQuat(Axis, ClampedAngle);
 		DeltaQuat.Normalize();
-UE_LOG(LogTemp,Display,TEXT("D2 %s "),*DeltaQuat.ToString());		
-//AttitudeTargetQuat.Normalize();
-//UE_LOG(LogTemp,Display,TEXT("S1 %s "),*AttitudeTargetQuat.ToString());
+
 		// Calculate new TargetQuat
-		AttitudeTargetQuat =  DeltaQuat * AttitudeTargetQuat;
-//		AttitudeTargetQuat.Normalize();
-//UE_LOG(LogTemp,Display,TEXT("S1 %s %s"),*AttitudeTargetQuat.ToString(), *DeltaQuat.ToString());
-
-
-		// Rotate Target around Yaw Rate Quat
-
-		//Yaw Rate World Rotation increment
-		FRotator YawRateRotator = FRotator(0.0f, YawRateIn * DeltaTime *100, 0.0f);
-		YawRateRotator = YawRateRotator.Clamp();
-		FQuat YawRateUpdateQuat = FQuat(YawRateRotator);
-		// Rotate for Yaw around World axis
-		AttitudeTargetQuat = AttitudeTargetQuat * YawRateUpdateQuat;
+		AttitudeTargetQuat = DeltaQuat * AttitudeTargetQuat;
 		AttitudeTargetQuat.Normalize();
-//UE_LOG(LogTemp,Display,TEXT("S2 %s %s"),*AttitudeTargetQuat.ToString(), *YawRateUpdateQuat.ToString());
 
-//UE_LOG(LogTemp,Display,TEXT("S%s "),*AttitudeTargetQuat.ToString());
-
+		//
 		// Perform Calculated Rotation from AttitudeQuat to AttitudeTargetQuat
+		//
+
 		RunQuat2();
 	}
 	
@@ -654,15 +649,15 @@ UE_LOG(LogTemp,Display,TEXT("D2 %s "),*DeltaQuat.ToString());
         EngineController->SetRotationRates(AngularVelocityToApply);
 */
 
-/*
+///*
 		// OPTION #1: Set Velocity in Physx directy (not recommended). Use only withot StabilizerLoop (RotationControlLoop = EControlLoop::ControlLoop_None)
 		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(AngularVelocityToApply, true, NAME_None);
-*/
+//*/
 
-///*
+/*
 		// OPTION #2: Simulate Torque by Velocity-Change in rads, dont care about Inertia, mass etc.
 		BodyInstance->AddTorqueInRadians(AngularVelocityToApply, true, true);  
-//*/
+*/
 /*
 		// OPTION #3: Apply Torque force from Velocity-Change in rads 
 		// to multiply with inertia tensor local then rotationTensor coords 
@@ -767,16 +762,16 @@ UE_LOG(LogTemp,Display,TEXT("D2 %s "),*DeltaQuat.ToString());
         EngineController->SetRotationRates(AngularVelocityToApply);
 */
 
-/*
+///*
 		// OPTION #1: Set Velocity in Physx directy (not recommended). Use only withot StabilizerLoop (RotationControlLoop = EControlLoop::ControlLoop_None)
 		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(AngularVelocityToApply, true, NAME_None);
-*/
+//*/
 
-///*
+/*
 		// OPTION #2: Simulate Torque by Velocity-Change in rads, dont care about Inertia, mass etc.
 		//BodyInstance->AddTorqueInRadians(AngularVelocityToApply, false, true);  
 		BodyInstance->AddAngularImpulseInRadians(AngularVelocityToApply, true);  
-//*/
+*/
 /*
 		// OPTION #3: Apply Torque force from Velocity-Change in rads 
 		// to multiply with inertia tensor local then rotationTensor coords 

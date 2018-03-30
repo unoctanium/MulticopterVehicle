@@ -559,7 +559,7 @@ struct FAttitudeController
 		// Perform Calculated Rotation from AttitudeQuat to AttitudeTargetQuat
 		//
 
-		RunQuat2();
+		RunQuat();
 	}
 	
 
@@ -569,19 +569,19 @@ struct FAttitudeController
 		RateRotator = RateRotator.Clamp();
 		FQuat AttitudeTargetUpdateQuat = FQuat(RateRotator);
 
-		AttitudeTargetQuat = AttitudeTargetUpdateQuat * AttitudeTargetQuat;
+		AttitudeTargetQuat = AttitudeTargetQuat * AttitudeTargetUpdateQuat;
 		AttitudeTargetQuat.Normalize();
 
-//UE_LOG(LogTemp,Display,TEXT("S%s "),*AttitudeTargetQuat.ToString());
-
 		// Call quaternion attitude controller
-		RunQuat2();
+		RunQuat();
 	}
 
 
 	/* --- RUN QUAT --- */
 
-	void RunQuat()
+
+
+	void RunQuatOld()
 	{
 		// We need the max turn rates in rads for clamping angular velocities
 		float MaxRPVelocityRad = FMath::DegreesToRadians(AccroRollPitchPGain);
@@ -649,10 +649,10 @@ struct FAttitudeController
         EngineController->SetRotationRates(AngularVelocityToApply);
 */
 
-///*
+/*
 		// OPTION #1: Set Velocity in Physx directy (not recommended). Use only withot StabilizerLoop (RotationControlLoop = EControlLoop::ControlLoop_None)
 		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(AngularVelocityToApply, true, NAME_None);
-//*/
+*/
 
 /*
 		// OPTION #2: Simulate Torque by Velocity-Change in rads, dont care about Inertia, mass etc.
@@ -691,7 +691,7 @@ struct FAttitudeController
 
 
 
-	void RunQuat2()
+	void RunQuat()
 	{
 
 		// We need the max turn rates in rads for clamping angular velocities
@@ -762,18 +762,22 @@ struct FAttitudeController
         EngineController->SetRotationRates(AngularVelocityToApply);
 */
 
-///*
+/*
 		// OPTION #1: Set Velocity in Physx directy (not recommended). Use only withot StabilizerLoop (RotationControlLoop = EControlLoop::ControlLoop_None)
 		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(AngularVelocityToApply, true, NAME_None);
-//*/
+*/
 
 /*
-		// OPTION #2: Simulate Torque by Velocity-Change in rads, dont care about Inertia, mass etc.
-		//BodyInstance->AddTorqueInRadians(AngularVelocityToApply, false, true);  
+		// OPTION #2: Simulate Velocity-Change in rads by Impulse, dont care about Inertia, mass etc.
 		BodyInstance->AddAngularImpulseInRadians(AngularVelocityToApply, true);  
 */
+
 /*
-		// OPTION #3: Apply Torque force from Velocity-Change in rads 
+		// OPTION #3: Simulate Acceleration-Change in rads by Torque, dont care about Inertia, mass etc.
+		BodyInstance->AddTorqueInRadians(AngularVelocityToApply / DeltaTime, false, true);  
+*/
+///*
+		// OPTION #4: Apply Torque force from Velocity-Change in rads 
 		// to multiply with inertia tensor local then rotationTensor coords 
 		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);  // a) raw
 		FQuat InertiaTensorRotation = BodyInstance->GetMassSpaceToWorldSpace().GetRotation(); 
@@ -781,23 +785,9 @@ struct FAttitudeController
 		AngularVelocityLocalInertia *= BodyInstance->GetBodyInertiaTensor(); 
 		FVector TorqueLocal = InertiaTensorRotation.Inverse() * AngularVelocityLocalInertia; 
 		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(TorqueLocal); 
-		//BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  
-		BodyInstance->AddAngularImpulseInRadians(AngularVelocityToApply, false); 
-*/	
-
-/*
-		// I must inspect this strange behaviour (slow rotation) if I just use 
-		// AngularVelocityTgt from above with PID Loop and Stabilize Mode active
-		// Until then, I use this code to correct everything
-		// !!!THIS IS DISFUNCTIONAL
-		if (RotationControlLoop == EControlLoop::ControlLoop_PID && FlightMode == EFlightMode::FM_Stabilize)
-		{
-			FVector FinalLocalTorque = PrimitiveComponent->GetComponentQuat().RotateVector(AngularVelocityToApply);	
-			FinalLocalTorque *= 2000000;
-			BodyInstance->AddTorqueInRadians(FinalLocalTorque, false, false);   
-		}			
-*/
-
+		BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  
+		//BodyInstance->AddAngularImpulseInRadians(AngularVelocityToApply, false); 
+//*/	
 	}
 
 

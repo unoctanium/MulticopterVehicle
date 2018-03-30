@@ -500,7 +500,7 @@ struct FAttitudeController
 	// Command an angular roll, pitch and rate yaw with angular velocity feedforward 
 	void InputAngleRollPitchRateYaw(float RollIn, float PitchIn, float YawRateIn)
 	{
-		/*
+		
 		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
 		AttitudeTargetRotator.Roll = RollIn;
 		AttitudeTargetRotator.Pitch = PitchIn;
@@ -513,8 +513,8 @@ struct FAttitudeController
 
 		// Call quaternion attitude controller
 		RunQuat();
-		*/
-
+		
+/*
 		float RollDir = RollIn > 0 ? 1 : (RollIn < 0 ? -1 : 0);
 		float PitchDir = PitchIn > 0 ? 1 : (PitchIn < 0 ? -1 : 0);
 
@@ -537,6 +537,7 @@ struct FAttitudeController
 
 		// Call quaternion attitude controller
 		RunQuat();
+		*/
 	}
 	
 

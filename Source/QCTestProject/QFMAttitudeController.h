@@ -525,7 +525,7 @@ struct FAttitudeController
 		//UE_LOG(LogTemp, Display, TEXT("Roll %f") , AttitudeTargetRotator.Roll);
 
 		AttitudeTargetRotator.Pitch += PitchDir * AccroRollPitchPGain * DeltaTime;
-		AttitudeTargetRotator.Pitch = FMath::Clamp(AttitudeTargetRotator.Pitch, -PitchIn * PichDir, PitchIn * PitchDir);
+		AttitudeTargetRotator.Pitch = FMath::Clamp(AttitudeTargetRotator.Pitch, -PitchIn * PitchDir, PitchIn * PitchDir);
 
 		AttitudeTargetRotator.Yaw += YawRateIn * DeltaTime;
 

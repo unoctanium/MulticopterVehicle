@@ -76,11 +76,11 @@ struct FAttitudeController
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Stabilizer-Loop to use for Rotations")) 
 	EControlLoop RotationControlLoop = EControlLoop::ControlLoop_FPD;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY SPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
-	FVector SPDDamping = FVector(5.0f, 5.0f, 5.0f);
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY SPD Gain 1"))
+	FVector SPD_KP = FVector(10000.0f, 10000.0f, 10000.0f);
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY SPD Frequency. Reach 95% of target in 1/Freq secs"))
-	FVector SPDFrequency = FVector(1.0f, 1.0f, 1.0f);
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY SPD Gain 2. Typically Gain2 < Gain1"))
+	FVector SPD_KD = FVector(1000.0f, 1000.0f, 1000.0f);
 
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
@@ -686,8 +686,8 @@ struct FAttitudeController
 	// Run the rotational angular velocity SPD controller and return the output delta w in rads
 	FVector StepRateRollSpd(FVector CurrentAttitude, FVector CurrentVelocity, FVector TargetAttitude, FVector InertiaTensor)
 	{
-		FVector kp = SPDFrequency * SPDFrequency * 9.0f; 
-		FVector kd = 4.5f * SPDFrequency * SPDDamping; 
+		FVector kp = SPD_KP; 
+		FVector kd = SPD_KD; 
 		float dt = DeltaTime; 
 		FVector I = InertiaTensor;
 		FVector g = FVector (
@@ -697,7 +697,7 @@ struct FAttitudeController
 		);
 		FVector kpg = g * kp; 
 		FVector kdg = -g * kd;
-//UE_LOG(LogTemp,Display,TEXT("kp: %s \t kd: %s \t cv %s "), *kp.ToString(), *kd.ToString(), *CurrentVelocity.ToString() );
+
 		return FVector(kpg * (CurrentAttitude + CurrentVelocity*dt - TargetAttitude) + kdg * CurrentVelocity) ; // * dt nötig hier??)
 	}
 

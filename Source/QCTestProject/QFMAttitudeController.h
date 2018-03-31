@@ -776,18 +776,21 @@ struct FAttitudeController
 		// OPTION #3: Simulate Acceleration-Change in rads by Torque, dont care about Inertia, mass etc.
 		BodyInstance->AddTorqueInRadians(AngularVelocityToApply / DeltaTime, false, true);  
 */
+/*
+		// OPTION #4: Simulate Velocity-Change in rads by Impulse, use Inertia Tensor 
+		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);
+		AngularVelocityLocal *= BodyInstance->GetBodyInertiaTensor(); 
+		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularVelocityLocal); 
+		BodyInstance->AddAngularImpulseInRadians(TorqueWorld, false);  
+*/	
 ///*
-		// OPTION #4: Apply Torque force from Velocity-Change in rads 
-		// to multiply with inertia tensor local then rotationTensor coords 
-		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);  // a) raw
-		FQuat InertiaTensorRotation = BodyInstance->GetMassSpaceToWorldSpace().GetRotation(); 
-		FVector AngularVelocityLocalInertia = InertiaTensorRotation * AngularVelocityLocal; 
-		AngularVelocityLocalInertia *= BodyInstance->GetBodyInertiaTensor(); 
-		FVector TorqueLocal = InertiaTensorRotation.Inverse() * AngularVelocityLocalInertia; 
-		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(TorqueLocal); 
+		// OPTION #5: Simulate Acceleration-Change in rads by Torque, use Inertia Tensor 
+		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply / DeltaTime);
+		AngularVelocityLocal *= BodyInstance->GetBodyInertiaTensor(); 
+		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularVelocityLocal); 
 		BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  
-		//BodyInstance->AddAngularImpulseInRadians(AngularVelocityToApply, false); 
 //*/	
+
 	}
 
 

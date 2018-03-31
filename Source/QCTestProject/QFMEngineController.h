@@ -352,39 +352,20 @@ struct FEngineController
 	}
 
 
+
 	//float SetThrottleOut(float ThrottleIn, bool ResetAttitudeController = true)
-	void SetThrottleOut(float ThrottleIn)
+	void SetDesiredThrottlePercent(float ThrottleIn)
 	{
 		ThrottleRequest = ThrottleIn;
 	}
 
 
-/*
-	// Set Roll -1..1
-	void SetRollRate(float ValueIn)
-	{
-		RollRequest = ValueIn;
-	}
-
-
-	// Set Pitch -1..1
-	void SetPitchRate(float ValueIn)
-	{
-		PitchRequest = ValueIn;
-	}
-
-
-	// Set Yaw -1..1
-	void SetYawRate(float ValueIn)
-	{
-		YawRequest = ValueIn;
-	}
-*/
-
-	void SetRotationRates(FVector inValue)
+	void SetDesiredRotationForces(FVector inValue)
 	{
 		RotationRequest = inValue;
 	}
+
+
 
 	bool IsLimitRollPitch()
 	{

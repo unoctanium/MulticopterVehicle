@@ -28,8 +28,8 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
 	EngineController.Tock(DeltaTime);
 
 	// And Apply Forces calculated in Engine Control
-	//AddLocalForceZ(EngineController.GetTotalThrust());
-	//AddLocalTorqueRad(EngineController.GetTotalTorque());
+	AddLocalForceZ(EngineController.GetTotalThrust());
+	AddLocalTorque(EngineController.GetTotalTorque());
 
 
     #ifdef WITH_EDITOR
@@ -83,17 +83,27 @@ void UQuadcopterFlightModel::Simulate(float DeltaTime, FBodyInstance* bodyInst) 
 // Call this to add Linear force to our parent
 void UQuadcopterFlightModel::AddLocalForceZ(FVector forceToApply)
 {
+
+	//UE_LOG(LogTemp, Display, TEXT("%f"), forceToApply.Z);
 	FVector finalLocalForce = Parent->GetUpVector() * forceToApply.Z * 100.0f; // F = ma, so kg * ((cm/s)/s), so it's actually kg cm s^-2 => multiply by 100 to convert from m to cm
 	BodyInstance->AddForce(finalLocalForce, false, false);
 	//Trajectory.LinearAcceleration = forceToApply.Z / Mass / 100.0f; // To Set it in m/s
 }
 
 // Call this to add Angular force to our parent
-void UQuadcopterFlightModel::AddLocalTorqueRad(FVector torqueToApply)
+void UQuadcopterFlightModel::AddLocalTorque(FVector torqueToApply)
 {
-	FVector finalLocalTorque = Parent->GetComponentQuat().RotateVector(torqueToApply) * 10000.0f; // T = r x F, so kg cm^2 s^-2 => multiply by 10000 to convert from m^2 to cm^2
-	BodyInstance->AddTorqueInRadians(finalLocalTorque, false, false);   
-	//Trajectory.AngularAcceleration = FVector(torqueToApply / InertiaTensor); // How to set it in deg / s^2 ???????
+	// OPTION #5 adapted: Simulate Acceleration-Change in rads by Torque, use Inertia Tensor 
+	FTransform bodyTransform =  BodyInstance->GetUnrealWorldTransform();
+	FVector AngularAccelerationLocal = bodyTransform.InverseTransformVectorNoScale(torqueToApply);
+	AngularAccelerationLocal *= BodyInstance->GetBodyInertiaTensor(); 
+	FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularAccelerationLocal); 
+	BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  
+
+
+	//FVector finalLocalTorque = Parent->GetComponentQuat().RotateVector(torqueToApply) * 10000.0f; // T = r x F, so kg cm^2 s^-2 => multiply by 10000 to convert from m^2 to cm^2
+	//BodyInstance->AddTorqueInRadians(finalLocalTorque, false, false);   
+	////Trajectory.AngularAcceleration = FVector(torqueToApply / InertiaTensor); // How to set it in deg / s^2 ???????
 }
 
 

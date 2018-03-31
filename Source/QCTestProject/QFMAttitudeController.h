@@ -29,7 +29,7 @@ struct FAttitudeController
 	/*--- PARAMETERS ---*/
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FlightMode")) 
-	EFlightMode FlightMode = EFlightMode::FM_Direct;
+	EFlightMode FlightMode = EFlightMode::FM_Stabilize;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Lean Angle Deg in Stab Mode")) 
 	float AngleMax = 45.0f;  
@@ -638,12 +638,18 @@ struct FAttitudeController
 		AngularVelocityToApply.Y = FMath::Clamp(AngularVelocityToApply.Y, -MaxRPVelocityRad, MaxRPVelocityRad);
 		AngularVelocityToApply.Z = FMath::Clamp(AngularVelocityToApply.Z, -MaxYVelocityRad, MaxYVelocityRad);
 
-/*
-		// OPTION #0: This is going to be the future code here. Options 1..3 will move to EngineController.h or Simulate.h
-		// Send Calculated Roll Rates in rads to the Engine Controller
-        EngineController->SetDesiredRotationForces(AngularVelocityToApply / DeltaTime);
-*/
-
+///*
+		// OPTION #0: This is the desired Option. The others are for debugging purposes only. 
+		// Send Calculated Roll Acceleration in rads to the Engine Controller
+		FVector DesiredEngineRotation = FVector(
+			AngularVelocityToApply.X / MaxRPVelocityRad,
+			AngularVelocityToApply.Y / MaxRPVelocityRad,
+			AngularVelocityToApply.Z / MaxYVelocityRad
+		);
+		EngineController->SetDesiredRotationForces(DesiredEngineRotation);
+        //EngineController->SetDesiredRotationForces(AngularVelocityToApply / DeltaTime / (MaxRPVelocityRad * DeltaTime));
+//*/
+/// For following Options it is better to disable gravity of the root mesh component because otherwise we will bounce off the ground if we rotate
 /*
 		// OPTION #1: Set Velocity in Physx directy (not recommended). Use only withot StabilizerLoop (RotationControlLoop = EControlLoop::ControlLoop_None)
 		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(AngularVelocityToApply, true, NAME_None);
@@ -665,13 +671,13 @@ struct FAttitudeController
 		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularVelocityLocal); 
 		BodyInstance->AddAngularImpulseInRadians(TorqueWorld, false);  
 */	
-///*
+/*
 		// OPTION #5: Simulate Acceleration-Change in rads by Torque, use Inertia Tensor 
 		FVector AngularAccelerationLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply / DeltaTime);
 		AngularAccelerationLocal *= BodyInstance->GetBodyInertiaTensor(); 
 		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularAccelerationLocal); 
 		BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  
-//*/	
+*/	
 
 	}
 

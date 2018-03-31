@@ -161,7 +161,7 @@ private:
 	
 	// Functions related to force Add Forces to our Parent. This will move and rotate it
 	void AddLocalForceZ(FVector forceToApply);
-	void AddLocalTorqueRad(FVector torqueToApply);
+	void AddLocalTorque(FVector torqueToApply);
 		/*
 	// Calculate forces to apply to get a desired result
 	FVector GetLinearImpulseToApply(FVector vDeltaInUEU);

@@ -176,20 +176,80 @@ struct FEngineController
 	}
 
 	
-
-	void SetEnginePercent(int engineNumber, float inValue)
+	// Update Throttle Mix to stay in controllable range
+	void UpdateThrottleRPYMix()
 	{
-		EngineSpeed[engineNumber] = inValue;
-		EngineSpeed[engineNumber] = FMath::Clamp<float>(EngineSpeed[engineNumber], 0.0f, 1.0f);
+
 	}
 
 
-	void SetEngineRPM(int engineNumber, float inValue)
+
+	/* --- MIXER --- */
+
+	void MixEngines() 
 	{
-		EngineSpeed[engineNumber] = inValue / EngineMaxRPM;
-		EngineSpeed[engineNumber] = FMath::Clamp<float>(EngineSpeed[engineNumber], 0.0f, 1.0f);
+
+		if (Vehicle->FrameMode == EFrameMode::FrameModeCross)
+		{
+			for (int i = 0; i < 4; i++) {
+				EngineMixPercent[i] = (
+					ThrottleRequest   * MixerQuadCross[i].Throttle +
+					RotationRequest.X * MixerQuadCross[i].Roll +
+					RotationRequest.Y * MixerQuadCross[i].Pitch +
+					RotationRequest.Z * MixerQuadCross[i].Yaw
+					);
+				
+			}
+		}
+		else if (Vehicle->FrameMode == EFrameMode::FrameModePlus)
+		{
+			for (int i = 0; i < 4; i++) {
+				EngineMixPercent[i] = (
+					ThrottleRequest     * MixerQuadPlus[i].Throttle +
+					RotationRequest.X * MixerQuadPlus[i].Roll +
+					RotationRequest.Y * MixerQuadPlus[i].Pitch +
+					RotationRequest.Z * MixerQuadPlus[i].Yaw
+					);
+			}
+		}
+
+
+		float maxMotorPercent = EngineMixPercent[0];
+
+		for (int i = 1; i < 4; i++)
+			if (EngineMixPercent[i] > maxMotorPercent)
+				maxMotorPercent = EngineMixPercent[i];
+
+		for (int i = 0; i < 4; i++)
+		{
+			// This is a way to still have good gyro corrections if at least one motor reaches its max
+			if (EngineMixPercent[i] > 1) 
+			{
+				EngineMixPercent[i] -= EngineMixPercent[i] - 1;
+			}
+
+			// Keep motor values in interval [0,1]
+			EngineMixPercent[i] = FMath::Clamp<float>(EngineMixPercent[i], 0, 1);
+		}
+	
+	
 	}
 
+
+
+
+
+	void SetEnginesFromMixer(void)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			EngineSpeed[i] = EngineMixPercent[i];
+		}
+		
+	}
+
+
+	
 
 
 	void GetEngineForces()
@@ -244,9 +304,9 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
-				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
-				EngineTorque.Z += MixerQuadCross[i].Yaw * SpeedToTorque[i] * Engine_B / 2000.0f;
+				EngineTorque.X += MixerQuadCross[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K ;
+				EngineTorque.Y += MixerQuadCross[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K;
+				EngineTorque.Z += MixerQuadCross[i].Yaw * SpeedToTorque[i] * Engine_B;
 			}
 
 		}
@@ -254,10 +314,9 @@ struct FEngineController
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
-				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K / 2000.0f;
-				EngineTorque.Z += MixerQuadPlus[i].Yaw * SpeedToTorque[i] * Engine_B / 2000.0f
-				;
+				EngineTorque.X += MixerQuadPlus[i].Roll * SpeedToThrust[i] * sinf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K;
+				EngineTorque.Y += MixerQuadPlus[i].Pitch * SpeedToThrust[i] * cosf(EngineAlpha[i]) * Vehicle->ArmLength * Engine_K;
+				EngineTorque.Z += MixerQuadPlus[i].Yaw * SpeedToTorque[i] * Engine_B;
 			}
 
 		}
@@ -265,6 +324,96 @@ struct FEngineController
 
 		
 	}
+
+
+
+
+
+	void SetEnginePercent(int engineNumber, float inValue)
+	{
+		EngineSpeed[engineNumber] = inValue;
+		EngineSpeed[engineNumber] = FMath::Clamp<float>(EngineSpeed[engineNumber], 0.0f, 1.0f);
+	}
+
+
+	void SetEngineRPM(int engineNumber, float inValue)
+	{
+		EngineSpeed[engineNumber] = inValue / EngineMaxRPM;
+		EngineSpeed[engineNumber] = FMath::Clamp<float>(EngineSpeed[engineNumber], 0.0f, 1.0f);
+	}
+
+
+
+	// Return Hover Throttle in range 0..1
+	// ODO: This comes from calculation ??? or a parameter ???
+	// MUST!! be in ]0..1]
+	float GetThrottleHover()
+	{
+		return FMath::Pow( (Vehicle->Mass * -Vehicle->Gravity) / (Vehicle->NumberOfEngines * Engine_K) , (1.0f / Engine_Q));     
+	}
+
+
+
+	//float SetThrottleOut(float ThrottleIn, bool ResetAttitudeController = true)
+	void SetDesiredThrottlePercent(float ThrottleIn)
+	{
+		ThrottleRequest = ThrottleIn;
+	}
+
+
+	void SetDesiredRotationForces(FVector inValue)
+	{
+		RotationRequest = inValue;
+	}
+
+
+
+	bool IsLimitRollPitch()
+	{
+		return false;
+	}
+
+
+
+	/* --- RETURN ENGINE DATA --- */
+
+	float GetEnginePercent(int engineNumber) 
+	{ 
+		return EngineSpeed[engineNumber]; 
+	}
+	
+	
+	float GetEngineRPM(int engineNumber) 
+	{ 
+		return EngineSpeed[engineNumber] * EngineMaxRPM; 
+	}
+	
+	
+	FVector GetTotalThrust() 
+	{	
+		return TotalThrust; 
+	}
+	
+	
+	FVector GetTotalTorque() 
+	{	
+		return TotalTorque; 
+	}
+
+
+
+	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Mixer %%  : 1=%f 2=%f 3=%f 4=%f"), EngineMixPercent[0], EngineMixPercent[1], EngineMixPercent[2], EngineMixPercent[3]), true, DebugFontSizeIn);
+
+		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Engines %%  : 1=%f 2=%f 3=%f 4=%f"), GetEnginePercent(0), GetEnginePercent(1), GetEnginePercent(2), GetEnginePercent(3)), true, DebugFontSizeIn);
+		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Engines RPM: 1=%f 2=%f 3=%f 4=%f"), GetEngineRPM(0), GetEngineRPM(1), GetEngineRPM(2), GetEngineRPM(3)), true, DebugFontSizeIn);
+		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Thrust / Torque: %s / %s"), *TotalThrust.ToString(), *TotalTorque.ToString()), true, DebugFontSizeIn);
+	}
+
+
+
+
 
 
 	/*
@@ -332,154 +481,6 @@ struct FEngineController
 
 
 	*/
-
-
-
-
-
-
-	
-
-
-
-
-	// Return Hover Throttle in range 0..1
-	// ODO: This comes from calculation ??? or a parameter ???
-	// MUST!! be in ]0..1]
-	float GetThrottleHover()
-	{
-		return FMath::Pow( (Vehicle->Mass * -Vehicle->Gravity) / (Vehicle->NumberOfEngines * Engine_K) , (1.0f / Engine_Q));     
-	}
-
-
-
-	//float SetThrottleOut(float ThrottleIn, bool ResetAttitudeController = true)
-	void SetDesiredThrottlePercent(float ThrottleIn)
-	{
-		ThrottleRequest = ThrottleIn;
-	}
-
-
-	void SetDesiredRotationForces(FVector inValue)
-	{
-		RotationRequest = inValue;
-	}
-
-
-
-	bool IsLimitRollPitch()
-	{
-		return false;
-	}
-
-
-
-	/* --- RETURN ENGINE DATA --- */
-
-	float GetEnginePercent(int engineNumber) 
-	{ 
-		return EngineSpeed[engineNumber]; 
-	}
-	
-	
-	float GetEngineRPM(int engineNumber) 
-	{ 
-		return EngineSpeed[engineNumber] * EngineMaxRPM; 
-	}
-	
-	
-	FVector GetTotalThrust() 
-	{	
-		return TotalThrust; 
-	}
-	
-	
-	FVector GetTotalTorque() 
-	{	
-		return TotalTorque; 
-	}
-
-
-
-	/* --- MIXER --- */
-
-	void MixEngines() 
-	{
-
-		if (Vehicle->FrameMode == EFrameMode::FrameModeCross)
-		{
-			for (int i = 0; i < 4; i++) {
-				EngineMixPercent[i] = (
-					ThrottleRequest   * MixerQuadCross[i].Throttle +
-					RotationRequest.X * MixerQuadCross[i].Roll +
-					RotationRequest.Y * MixerQuadCross[i].Pitch +
-					RotationRequest.Z * MixerQuadCross[i].Yaw
-					);
-				
-			}
-		}
-		else if (Vehicle->FrameMode == EFrameMode::FrameModePlus)
-		{
-			for (int i = 0; i < 4; i++) {
-				EngineMixPercent[i] = (
-					ThrottleRequest     * MixerQuadPlus[i].Throttle +
-					RotationRequest.X * MixerQuadPlus[i].Roll +
-					RotationRequest.Y * MixerQuadPlus[i].Pitch +
-					RotationRequest.Z * MixerQuadPlus[i].Yaw
-					);
-			}
-		}
-
-
-		float maxMotorPercent = EngineMixPercent[0];
-
-		for (int i = 1; i < 4; i++)
-			if (EngineMixPercent[i] > maxMotorPercent)
-				maxMotorPercent = EngineMixPercent[i];
-
-		for (int i = 0; i < 4; i++)
-		{
-			// This is a way to still have good gyro corrections if at least one motor reaches its max
-			if (EngineMixPercent[i] > 1) 
-			{
-				EngineMixPercent[i] -= EngineMixPercent[i] - 1;
-			}
-
-			// Keep motor values in interval [0,1]
-			EngineMixPercent[i] = FMath::Clamp<float>(EngineMixPercent[i], 0, 1);
-		}
-	
-	
-	}
-
-
-	void SetEnginesFromMixer(void)
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			EngineSpeed[i] = EngineMixPercent[i];
-		}
-		
-	}
-
-
-	// Update Throttle Mix to stay in controllable range
-	void UpdateThrottleRPYMix()
-	{
-
-	}
-
-
-	void Debug(FColor ColorIn, FVector2D DebugFontSizeIn)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Mixer %%  : 1=%f 2=%f 3=%f 4=%f"), EngineMixPercent[0], EngineMixPercent[1], EngineMixPercent[2], EngineMixPercent[3]), true, DebugFontSizeIn);
-
-		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Engines %%  : 1=%f 2=%f 3=%f 4=%f"), GetEnginePercent(0), GetEnginePercent(1), GetEnginePercent(2), GetEnginePercent(3)), true, DebugFontSizeIn);
-		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Engines RPM: 1=%f 2=%f 3=%f 4=%f"), GetEngineRPM(0), GetEngineRPM(1), GetEngineRPM(2), GetEngineRPM(3)), true, DebugFontSizeIn);
-		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Thrust / Torque: %s / %s"), *TotalThrust.ToString(), *TotalTorque.ToString()), true, DebugFontSizeIn);
-		
-
-	}
 
 
 

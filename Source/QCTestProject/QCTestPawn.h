@@ -39,11 +39,6 @@ class QCTESTPROJECT_API AQCPawn : public APawn
 public:
 
 
-	// Mesh Scale
-	UPROPERTY(Category = "QuadcopterPawn|????????????????????????????", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float MeshScale = 3.0f;//  1.0f;
-
-
 
 	// Root Component of our Pawn
     // I changed the root component to the Mesh!! To revert this: uncomment the following two lines and change the initialization in AcPawn::AcPawn()
@@ -89,10 +84,10 @@ public:
 		float CamElevation = 37.0f;
 
 	UPROPERTY(Category = "QuadcopterPawn|Camera", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float VRCamDistance = 30.0f / MeshScale;
+		float VRCamDistance = 30.0f;
 
 	UPROPERTY(Category = "QuadcopterPawn|Camera", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float VRCamElevation = 80.0f / MeshScale;
+		float VRCamElevation = 80.0f;
 
 
 

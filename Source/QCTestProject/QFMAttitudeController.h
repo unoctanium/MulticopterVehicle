@@ -262,7 +262,18 @@ struct FAttitudeController
 		float ThrottleScaled;
 		ThrottleScaled = GetPilotDesiredThrottle(PilotInput.W);
 		EngineController->SetDesiredThrottlePercent(ThrottleScaled);
-		EngineController->SetDesiredRotationForces(PilotInput * FMath::DegreesToRadians(AccroRollPitchPGain));
+
+		FTransform bodyTransform =  BodyInstance->GetUnrealWorldTransform();
+		FVector AngularVelocityToApply = FVector(
+			PilotInput.X,
+			PilotInput.Y,
+			PilotInput.Z
+		);
+		UE_LOG(LogTemp,Display, TEXT("%s"),*AngularVelocityToApply.ToString());
+		
+		EngineController->SetDesiredRotationForces(
+			AngularVelocityToApply * DeltaTime
+		);
 	}
 
 
@@ -446,9 +457,14 @@ struct FAttitudeController
 		}
 
 		// Expo 
-		float Expo = FMath::Clamp<float>(-(ThrottleMidIn - 0.5) / 0.375, -0.5f, 1.0f); // calculate the output throttle using the given expo function 
-		float ThrottleOut = ThrottleIn * (1.0f - Expo) + Expo * ThrottleIn*ThrottleIn*ThrottleIn;
+		//float Expo = FMath::Clamp<float>(-(ThrottleMidIn - 0.5) / 0.375, -0.5f, 1.0f); // calculate the output throttle using the given expo function 
+		float Expo = -(ThrottleMidIn - 0.5) / 0.375; 
+		
+		float ThrottleOut = (ThrottleIn * (1 - Expo) + Expo * ThrottleIn*ThrottleIn*ThrottleIn);
 
+		//!!! We have a  problem with the Expo function. If we clamp it, we dont hover, if we dont: ThrottleOut(1) != 1
+		//UE_LOG(LogTemp, Display, TEXT("%f %f %f %f"), Expo, ThrottleIn, ThrottleMidIn, ThrottleOut);
+		
 		return ThrottleOut;
 	}
 
@@ -571,7 +587,6 @@ struct FAttitudeController
 		RunQuat();
 	}
 
-
 	/* --- RUN QUAT --- */
 
 	void RunQuat()
@@ -641,6 +656,7 @@ struct FAttitudeController
 ///*
 		// OPTION #0: This is the desired Option. The others are for debugging purposes only. 
 		// Send Calculated Roll Acceleration in rads to the Engine Controller
+		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);
 		FVector DesiredEngineRotation = FVector(
 			AngularVelocityToApply.X / MaxRPVelocityRad,
 			AngularVelocityToApply.Y / MaxRPVelocityRad,

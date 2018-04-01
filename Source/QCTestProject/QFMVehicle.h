@@ -105,13 +105,16 @@ struct FVehicle
 			BodyInstance->SetMassOverride(Mass, true);
 			BodyInstance->UpdateMassProperties();
 
-			// Set Center Of Mass
-			PrimitiveComponent->SetCenterOfMass(BodyInstance->GetCOMPosition() - BodyInstance->GetCOMPosition());
-			FTransform transform = PrimitiveComponent->GetComponentTransform();
-			BodyInstance->COMNudge = transform.GetTranslation() - BodyInstance->GetCOMPosition() + CenterOfMass * 100;
-
 			// PhyX Inertia Tensor Override
 			PRigidBody->setMassSpaceInertiaTensor(physx::PxVec3(InertiaTensor.X, InertiaTensor.Y, InertiaTensor.Z));
+
+			// Set Center Of Mass
+			//PrimitiveComponent->SetCenterOfMass(BodyInstance->GetCOMPosition() - BodyInstance->GetCOMPosition());
+			//FTransform transform = PrimitiveComponent->GetComponentTransform();
+			//BodyInstance->COMNudge = transform.GetTranslation() - BodyInstance->GetCOMPosition() + CenterOfMass * 100;
+			//PRigidBody->setCMassLocalPose(physx::PxTransform(physx::PxVec3(CenterOfMass.X, CenterOfMass.Y, CenterOfMass.Z)));
+
+			//BodyInstance->UpdateMassProperties();
 			
 		}
 		// Store Mass Properties in Vehicle Struct

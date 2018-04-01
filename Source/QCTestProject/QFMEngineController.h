@@ -24,7 +24,7 @@
 
 
 // Roll right = +
-// pitch up = +
+// pitch down = +
 // yaw right = +
 
 USTRUCT()
@@ -68,7 +68,7 @@ struct FEngineController
 */
 
 	UPROPERTY() 
-	FVector RotationRequest; // -1..1 or MaxRates???????
+	FVector RotationRequest; // -1..1 
 
 	UPROPERTY() 
 	float ThrottleRequest; // 0..1
@@ -104,15 +104,15 @@ struct FEngineController
 		{ +1, -1,  +1, +1 }, // RB+
 		{ +1, +1,  +1, -1 }, // LB-
 		{ +1, +1,  -1, +1 } // LF+
-	};
+	}; // TRPY
 		
 	UPROPERTY()
 	FQuadcopterFlightModelMixerStruct MixerQuadPlus[4] = {
 		{ +1, 0,  -1, -1 }, // F-
-		{ +1, -1,  +1, +1 }, // R+
+		{ +1, -1,  0, +1 }, // R+
 		{ +1, 0,  +1, -1 }, // B-
-		{ +1, +1,  -1, +1 } // L+
-	};
+		{ +1, +1,  0, +1 } // L+
+	}; // TRPY
 	
 	UPROPERTY()
 	float EngineMixPercent[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -279,9 +279,9 @@ struct FEngineController
 		else if (Vehicle->FrameMode == EFrameMode::FrameModePlus)
 		{
 			EngineAlpha[0] = FMath::DegreesToRadians<float>(0);
-			EngineAlpha[1] = FMath::DegreesToRadians<float>(45);
+			EngineAlpha[1] = FMath::DegreesToRadians<float>(90);
 			EngineAlpha[2] = FMath::DegreesToRadians<float>(0);
-			EngineAlpha[3] = FMath::DegreesToRadians<float>(45);
+			EngineAlpha[3] = FMath::DegreesToRadians<float>(90);
 		}
 
 		
@@ -351,8 +351,7 @@ struct FEngineController
 	{
 		return FMath::Pow( (Vehicle->Mass * -Vehicle->Gravity) / (Vehicle->NumberOfEngines * Engine_K) , (1.0f / Engine_Q));     
 	}
-
-
+		
 
 	//float SetThrottleOut(float ThrottleIn, bool ResetAttitudeController = true)
 	void SetDesiredThrottlePercent(float ThrottleIn)

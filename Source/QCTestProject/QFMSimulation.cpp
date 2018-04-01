@@ -95,7 +95,7 @@ void UQuadcopterFlightModel::AddLocalTorque(FVector torqueToApply)
 {
 	// OPTION #5 adapted: Simulate Acceleration-Change in rads by Torque, use Inertia Tensor 
 	FTransform bodyTransform =  BodyInstance->GetUnrealWorldTransform();
-	FVector AngularAccelerationLocal = bodyTransform.InverseTransformVectorNoScale(torqueToApply);
+	FVector AngularAccelerationLocal = torqueToApply; //bodyTransform.InverseTransformVectorNoScale(torqueToApply);
 	AngularAccelerationLocal *= BodyInstance->GetBodyInertiaTensor(); 
 	FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularAccelerationLocal); 
 	BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  

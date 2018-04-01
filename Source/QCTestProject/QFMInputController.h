@@ -38,7 +38,9 @@ struct FInputController
 	FVector2D ThrottleAxisInputInterval = FVector2D(-1.0f, 1.0f);
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterPilotInput|AxisSettings", meta = (ToolTip = "Stick: Sacle Axis R,P,Y,T. Negative to invert")) 
-	FVector4 InputAxisScale = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	FVector4 InputAxisScale = FVector4(-1.0f, -1.0f, 1.0f, 1.0f);
+	// R and P are inverted here, because this is the default of Xbox Controller.
+	// So in the Project Settings we can leave all Inpus Axis to default
 
 
 	// Desired Input

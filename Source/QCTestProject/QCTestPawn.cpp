@@ -32,7 +32,7 @@ AQCPawn::AQCPawn()
 	{
 		PawnMesh->SetStaticMesh(MeshVisualAsset.Object);
 		PawnMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-		PawnMesh->SetWorldScale3D(FVector(MeshScale));
+		//PawnMesh->SetWorldScale3D(FVector(MeshScale));
 	}
 	//RootComponent = PawnMesh;
 
@@ -56,7 +56,7 @@ AQCPawn::AQCPawn()
 	
 	createCameraWithSpringArm(L"FpvCamera", &FpvCamera, L"FpvCameraSpringArm",
 		&FpvCameraSpringArm, VRCamDistance,  VRCamElevation, 0, false);
-	FpvCameraSpringArm->SetRelativeScale3D(FVector(1 / MeshScale, 1 / MeshScale, 1 / MeshScale));
+	//FpvCameraSpringArm->SetRelativeScale3D(FVector(1 / MeshScale, 1 / MeshScale, 1 / MeshScale));
 
 
 	// Create the follow camera
@@ -95,7 +95,7 @@ AQCPawn::AQCPawn()
     hudWidget->SetWidgetClass(hudWidgetClass);
 	hudWidget->SetDrawSize(FVector2D(1280.0f, 720.0f));
     hudWidget->SetRelativeLocation(FVector(70.0f, 0.0f, 30.0f));
-	hudWidget->SetRelativeScale3D(FVector(1.0 / MeshScale / 3.0, 1.0 / MeshScale / 3.0, 1.0 / MeshScale / 3.0));
+	//hudWidget->SetRelativeScale3D(FVector(1.0 / MeshScale / 3.0, 1.0 / MeshScale / 3.0, 1.0 / MeshScale / 3.0));
 	hudWidget->SetRelativeRotation(FRotator(0.0f,-180.0f,-30.0f));
     //udWidget->GeometryMode = EWidgetGeometryMode::Cylinder;
 	//hudWidget->CylinderArcAngle = 30.0f;

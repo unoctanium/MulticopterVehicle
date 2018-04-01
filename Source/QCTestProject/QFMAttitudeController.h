@@ -269,10 +269,8 @@ struct FAttitudeController
 			PilotInput.Y,
 			PilotInput.Z
 		);
-		UE_LOG(LogTemp,Display, TEXT("%s"),*AngularVelocityToApply.ToString());
-		
 		EngineController->SetDesiredRotationForces(
-			AngularVelocityToApply * DeltaTime
+			AngularVelocityToApply //* DeltaTime
 		);
 	}
 
@@ -530,8 +528,8 @@ struct FAttitudeController
 
 		//  Calculate desired Attitude from Roll and pitch angles
 		FRotator AttitudeTargetRotator = AttitudeTargetQuat.Rotator();
-		AttitudeTargetRotator.Roll = RollIn;
-		AttitudeTargetRotator.Pitch = PitchIn;
+		AttitudeTargetRotator.Roll = -RollIn;
+		AttitudeTargetRotator.Pitch = -PitchIn;
 		AttitudeTargetRotator.Yaw = AttitudeTargetQuat.Rotator().Yaw ;
 		AttitudeTargetRotator = AttitudeTargetRotator.Clamp();
 		// Compute quaternion target attitude
@@ -576,7 +574,7 @@ struct FAttitudeController
 
 	void InputRateBodyRollPitchYaw(float RollRateIn, float PitchRateIn, float YawRateIn)
 	{
-		FRotator RateRotator = FRotator(PitchRateIn * DeltaTime, YawRateIn * DeltaTime, RollRateIn*DeltaTime);
+		FRotator RateRotator = FRotator(-PitchRateIn * DeltaTime, YawRateIn * DeltaTime, -RollRateIn*DeltaTime);
 		RateRotator = RateRotator.Clamp();
 		FQuat AttitudeTargetUpdateQuat = FQuat(RateRotator);
 
@@ -656,14 +654,14 @@ struct FAttitudeController
 ///*
 		// OPTION #0: This is the desired Option. The others are for debugging purposes only. 
 		// Send Calculated Roll Acceleration in rads to the Engine Controller
-		//FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);
+		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);
 		FVector DesiredEngineRotation = FVector(
-			AngularVelocityToApply.X / MaxRPVelocityRad,
-			AngularVelocityToApply.Y / MaxRPVelocityRad,
-			AngularVelocityToApply.Z / MaxYVelocityRad
+			AngularVelocityLocal.X / MaxRPVelocityRad,
+			AngularVelocityLocal.Y / MaxRPVelocityRad,
+			AngularVelocityLocal.Z / MaxYVelocityRad
 		);
+		DesiredEngineRotation /= DeltaTime;
 		EngineController->SetDesiredRotationForces(DesiredEngineRotation);
-        //EngineController->SetDesiredRotationForces(AngularVelocityToApply / DeltaTime / (MaxRPVelocityRad * DeltaTime));
 //*/
 /// For following Options it is better to disable gravity of the root mesh component because otherwise we will bounce off the ground if we rotate
 /*
@@ -689,7 +687,11 @@ struct FAttitudeController
 */	
 /*
 		// OPTION #5: Simulate Acceleration-Change in rads by Torque, use Inertia Tensor 
-		FVector AngularAccelerationLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply / DeltaTime);
+		FVector AngularAccelerationLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);
+		//UE_LOG(LogTemp,Display,TEXT("%.4f \t %.4f \t %.4f \t: \t %.4f \t %.4f \t %.4f"),
+		//	FMath::Abs(AngularVelocityToApply.X), FMath::Abs(AngularVelocityToApply.Y), FMath::Abs(AngularVelocityToApply.Z),
+		//	FMath::Abs(AngularAccelerationLocal.X), FMath::Abs(AngularAccelerationLocal.Y), FMath::Abs(AngularAccelerationLocal.Z));		
+		AngularAccelerationLocal /= DeltaTime;
 		AngularAccelerationLocal *= BodyInstance->GetBodyInertiaTensor(); 
 		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularAccelerationLocal); 
 		BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  

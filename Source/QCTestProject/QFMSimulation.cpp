@@ -95,15 +95,11 @@ void UQuadcopterFlightModel::AddLocalTorque(FVector torqueToApply)
 {
 	// OPTION #5 adapted: Simulate Acceleration-Change in rads by Torque, use Inertia Tensor 
 	FTransform bodyTransform =  BodyInstance->GetUnrealWorldTransform();
+
 	FVector AngularAccelerationLocal = torqueToApply; //bodyTransform.InverseTransformVectorNoScale(torqueToApply);
 	AngularAccelerationLocal *= BodyInstance->GetBodyInertiaTensor(); 
 	FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularAccelerationLocal); 
 	BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  
-
-
-	//FVector finalLocalTorque = Parent->GetComponentQuat().RotateVector(torqueToApply) * 10000.0f; // T = r x F, so kg cm^2 s^-2 => multiply by 10000 to convert from m^2 to cm^2
-	//BodyInstance->AddTorqueInRadians(finalLocalTorque, false, false);   
-	////Trajectory.AngularAcceleration = FVector(torqueToApply / InertiaTensor); // How to set it in deg / s^2 ???????
 }
 
 

@@ -172,7 +172,8 @@ struct FEngineController
 		GetEngineForces();
 
 		//PrimitiveComponent->SetPhysicsAngularVelocityInRadians(TotalTorque, true, NAME_None);
-
+TotalTorque=RotationRequest;
+TotalThrust=FVector::ZeroVector;
 	}
 
 	

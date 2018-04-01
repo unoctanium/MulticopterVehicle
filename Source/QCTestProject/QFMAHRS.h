@@ -134,17 +134,17 @@ struct FAHRS
 
 	void Debug(FColor Color, FVector2D DebugFontSize)
 	{
-		/*
+		
 		// Down to up on the debug screen
 		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Angular Acceleration (deg/s^2): X=%f Y=%f Z=%f"), AngularAcceleration.X, AngularAcceleration.Y, AngularAcceleration.Z), true, DebugFontSize);
 		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Linear Acceleration (m/s^2): %f"), LinearAcceleration), true, DebugFontSize);
 		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Angular Velocity (deg/s): X=%f Y=%f Z=%f"), AngularVelocity.X, AngularVelocity.Y, AngularVelocity.Z), true, DebugFontSize);
-		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Linear Velocity 2D (m/s): %f"), LinearVelocity2D), true, DebugFontSize);
+		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Linear Velocity 2D (km/h): %f"), LinearVelocity2D * 3600.0f / 1000.0f), true, DebugFontSize);
 		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Linear Velocity Vector (m/s): X=%f Y=%f Z=%f"), VelocityVector.X, VelocityVector.Y, VelocityVector.Z), true, DebugFontSize);
 		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Linear Velocity (m/s): %f"), LinearVelocity), true, DebugFontSize);
 		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Rotation (deg): R=%f P=%f Y=%f"), Rotation.Roll, Rotation.Pitch, Rotation.Yaw), true, DebugFontSize);
 		GEngine->AddOnScreenDebugMessage(-1, 0, Color, FString::Printf(TEXT("Position (m): X=%f Y=%f Z=%f"), Position.X, Position.Y, Position.Z), true, DebugFontSize);
-		*/
+		
 	}
 
 

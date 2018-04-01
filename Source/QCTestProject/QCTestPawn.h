@@ -13,6 +13,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Classes/InputCoreTypes.h"
 #include <EngineGlobals.h>
 #include <Runtime/Engine/Classes/Engine/Engine.h>
@@ -94,6 +95,20 @@ public:
 		float VRCamElevation = 80.0f / MeshScale;
 
 
+
+	// UI: FPV HUD
+	UPROPERTY(Category = "QuadcopterPawn|HUD", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+    class UWidgetComponent * hudWidget;
+
+	UPROPERTY()
+	class UClass * hudWidgetClass;
+	
+	// Delegates from QuadcopterComponent for BP
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD")
+	float GetSpeedOverGroundKmh();
+
+
+
 	// Networking
 	UPROPERTY(Category = "QuadcopterPawn", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class URamaUDPSender *UDPSender;
@@ -137,6 +152,9 @@ public:
 	void InputYaw(float inValue);
 	void InputThrottle(float inValue);
 	void InputKillTrajectory();
+
+
+
 
 
 

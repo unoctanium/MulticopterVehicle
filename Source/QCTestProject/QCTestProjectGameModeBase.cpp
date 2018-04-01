@@ -3,5 +3,9 @@
 #include "QCTestProjectGameModeBase.h"
 
 
-
+AQCTestProjectGameModeBase::AQCTestProjectGameModeBase()
+{
+    // Define the HUD for the Menulayer
+	HUDClass = AQCHUD::StaticClass();
+}
 

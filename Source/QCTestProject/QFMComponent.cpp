@@ -147,3 +147,9 @@ FVector UQuadcopterFlightModel::GetUDPDebugOutput()
 {
 	return AttitudeController.GetUDPDebugOutput();
 }
+
+
+float UQuadcopterFlightModel::GetSpeedOverGroundKmh()
+{
+	return AHRS.LinearVelocity2D;
+}

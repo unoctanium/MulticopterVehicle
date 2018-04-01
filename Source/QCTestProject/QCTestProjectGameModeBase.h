@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
+#include "QCHUD.h"
+
 #include "QCTestProjectGameModeBase.generated.h"
 
 /**
@@ -14,8 +16,10 @@ UCLASS()
 class QCTESTPROJECT_API AQCTestProjectGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-	
+
+public:
+
+	AQCTestProjectGameModeBase();
 	
 	
 };

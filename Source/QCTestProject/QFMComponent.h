@@ -103,19 +103,22 @@ public:
 
 	// For UQuadcopterFlightModelEngine
 
-	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|Engine") 
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
 	float GetEngineRPM(int engineNumber);
 	
-	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|Engine") 
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
 	float GetEnginePercent(int engineNumber);
 	
-	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|Engine")	
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD")	
 	FVector GetTotalThrust();
 	
-	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|Engine") 
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
 	FVector GetTotalTorque();
 		
-    
+    UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetSpeedOverGroundKmh();
+
+
     // Called when the game starts
     virtual void BeginPlay() override;
     

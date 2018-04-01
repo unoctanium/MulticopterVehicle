@@ -79,6 +79,30 @@ AQCPawn::AQCPawn()
 	ChaseCameraZoomFactor = ChaseCameraSpringArm->TargetArmLength;
 
 
+	// Create the HUD
+	hudWidget = CreateDefaultSubobject<UWidgetComponent>("HUD Widget");
+    static ConstructorHelpers::FClassFinder<UUserWidget> hudWidgetObj(TEXT("/Game/QC/UI/FPVUI"));
+    if (hudWidgetObj.Succeeded()) 
+	{
+    	hudWidgetClass = hudWidgetObj.Class;
+    }
+    else 
+	{
+    	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "SelectableActorHUD not found !");
+    	hudWidgetClass = nullptr;
+    }
+    hudWidget->SetWidgetSpace(EWidgetSpace::World);
+    hudWidget->SetWidgetClass(hudWidgetClass);
+	hudWidget->SetDrawSize(FVector2D(1280.0f, 720.0f));
+    hudWidget->SetRelativeLocation(FVector(70.0f, 0.0f, 30.0f));
+	hudWidget->SetRelativeScale3D(FVector(1.0 / MeshScale / 3.0, 1.0 / MeshScale / 3.0, 1.0 / MeshScale / 3.0));
+	hudWidget->SetRelativeRotation(FRotator(0.0f,-180.0f,-30.0f));
+    //udWidget->GeometryMode = EWidgetGeometryMode::Cylinder;
+	//hudWidget->CylinderArcAngle = 30.0f;
+    hudWidget->SetVisibility(true);
+    hudWidget->RegisterComponent();
+
+
 	// Create UDP Actor
 	UDPSender = CreateDefaultSubobject<URamaUDPSender>(TEXT("UDP Sender"));
 	UDPSender->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetIncludingScale);
@@ -344,7 +368,7 @@ void AQCPawn::ResetHMDOrigin()
 
 
 
-/* No Idea why I cant use the delegates directly un BindAction */
+/* No Idea why I cant use the delegates directly to BindAction to bp */
 
 void AQCPawn::InputRoll(float inValue)
 {
@@ -371,3 +395,11 @@ void AQCPawn::InputKillTrajectory()
 	QuadcopterFlightModel->InputKillTrajectory();
 }
 
+
+
+/* VR Related stuff */
+
+float AQCPawn::GetSpeedOverGroundKmh()
+{
+	return QuadcopterFlightModel->GetSpeedOverGroundKmh();
+}

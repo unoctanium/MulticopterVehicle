@@ -619,6 +619,11 @@ struct FAttitudeController
 		// AngularVelocityToApply is the w we need to Apply to physx directly or after torque calculation
 		FVector AngularVelocityToApply = FVector::ZeroVector;
 		
+		// Make all Velocity Vectors local space
+		AngularVelocityTgt = bodyTransform.InverseTransformVectorNoScale(AngularVelocityTgt);
+		AngularVelocityToApply = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);
+		AngularVelocityNow = bodyTransform.InverseTransformVectorNoScale(AngularVelocityNow);
+		
 		// AngularVelocityToApply depends on the choosen ControlLoop
 		if(RotationControlLoop == EControlLoop::ControlLoop_None)
 		{
@@ -642,7 +647,7 @@ struct FAttitudeController
 		else if (RotationControlLoop == EControlLoop::ControlLoop_SPD)
 		{
 			// For Option d) Run the SPD-Controllers to find SPD Angular Velocity to Apply in rads 
-    	    AngularVelocityToApply = StepRateRollSpd( FMath::DegreesToRadians(AttitudeVehicleQuat.Euler()), AngularVelocityNow, FMath::DegreesToRadians(AttitudeTargetQuat.Euler()), BodyInstance->GetBodyInertiaTensor()/10000.0f) ;
+    	    AngularVelocityToApply = StepRateRollSpd( AttitudeVehicleQuat, AngularVelocityNow, AttitudeTargetQuat, BodyInstance->GetBodyInertiaTensor()/10000.0f) ;
 		}
 
 
@@ -654,47 +659,53 @@ struct FAttitudeController
 ///*
 		// OPTION #0: This is the desired Option. The others are for debugging purposes only. 
 		// Send Calculated Roll Acceleration in rads to the Engine Controller
-		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);
 		FVector DesiredEngineRotation = FVector(
-			AngularVelocityLocal.X / MaxRPVelocityRad,
-			AngularVelocityLocal.Y / MaxRPVelocityRad,
-			AngularVelocityLocal.Z / MaxYVelocityRad
+			AngularVelocityToApply.X / MaxRPVelocityRad,
+			AngularVelocityToApply.Y / MaxRPVelocityRad,
+			AngularVelocityToApply.Z / MaxYVelocityRad
 		);
 		DesiredEngineRotation /= DeltaTime;
-		EngineController->SetDesiredRotationForces(DesiredEngineRotation);
+		EngineController->SetDesiredRotationForces(DesiredEngineRotation); // local space !!
 //*/
-/// For following Options it is better to disable gravity of the root mesh component because otherwise we will bounce off the ground if we rotate
+
+/// For following Options it is better to disable gravity of the root mesh for debug purposes
+
 /*
-		// OPTION #1: Set Velocity in Physx directy (not recommended). Use only withot StabilizerLoop (RotationControlLoop = EControlLoop::ControlLoop_None)
-		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(AngularVelocityToApply, true, NAME_None);
+		// OPTION #1: Rotate direct. Not recommended
+		FHitResult Hit = FHitResult();
+		PrimitiveComponent->AddWorldRotation(DeltaQuat, false, &Hit, ETeleportType::TeleportPhysics);
 */
 
 /*
-		// OPTION #2: Simulate Velocity-Change in rads by Impulse, dont care about Inertia, mass etc.
-		BodyInstance->AddAngularImpulseInRadians(AngularVelocityToApply, true);  
+		// OPTION #2: Set Velocity in Physx directy (not recommended). Use only withot StabilizerLoop (RotationControlLoop = EControlLoop::ControlLoop_None)
+		FVector AngularVelocityGlobal = bodyTransform.TransformVectorNoScale(AngularVelocityToApply);
+		PrimitiveComponent->SetPhysicsAngularVelocityInRadians(AngularVelocityGlobal, true, NAME_None); // global space
 */
 
 /*
-		// OPTION #3: Simulate Acceleration-Change in rads by Torque, dont care about Inertia, mass etc.
-		BodyInstance->AddTorqueInRadians(AngularVelocityToApply / DeltaTime, false, true);  
+		// OPTION #3: Simulate Velocity-Change in rads by Impulse, dont care about Inertia, mass etc.
+		FVector AngularImpulseGlobal = bodyTransform.TransformVectorNoScale(AngularVelocityToApply);
+		BodyInstance->AddAngularImpulseInRadians(AngularImpulseGlobal, true); // global space
+*/
+
+/*
+		// OPTION #4: Simulate Acceleration-Change in rads by Torque, dont care about Inertia, mass etc.
+		FVector AngularAccelerationGlobal = bodyTransform.TransformVectorNoScale(AngularVelocityToApply);
+		BodyInstance->AddTorqueInRadians(AngularAccelerationGlobal / DeltaTime, false, true); // global space
 */
 /*
-		// OPTION #4: Simulate Velocity-Change in rads by Impulse, use Inertia Tensor 
-		FVector AngularVelocityLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);
+		// OPTION #5: Simulate Velocity-Change in rads by Impulse, use Inertia Tensor 
+		FVector AngularVelocityLocal = AngularVelocityToApply;
 		AngularVelocityLocal *= BodyInstance->GetBodyInertiaTensor(); 
 		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularVelocityLocal); 
-		BodyInstance->AddAngularImpulseInRadians(TorqueWorld, false);  
+		BodyInstance->AddAngularImpulseInRadians(TorqueWorld, false); // global space
 */	
 /*
-		// OPTION #5: Simulate Acceleration-Change in rads by Torque, use Inertia Tensor 
-		FVector AngularAccelerationLocal = bodyTransform.InverseTransformVectorNoScale(AngularVelocityToApply);
-		//UE_LOG(LogTemp,Display,TEXT("%.4f \t %.4f \t %.4f \t: \t %.4f \t %.4f \t %.4f"),
-		//	FMath::Abs(AngularVelocityToApply.X), FMath::Abs(AngularVelocityToApply.Y), FMath::Abs(AngularVelocityToApply.Z),
-		//	FMath::Abs(AngularAccelerationLocal.X), FMath::Abs(AngularAccelerationLocal.Y), FMath::Abs(AngularAccelerationLocal.Z));		
-		AngularAccelerationLocal /= DeltaTime;
+		// OPTION #6: Simulate Acceleration-Change in rads by Torque, use Inertia Tensor 
+		FVector AngularAccelerationLocal = AngularVelocityToApply / DeltaTime;
 		AngularAccelerationLocal *= BodyInstance->GetBodyInertiaTensor(); 
 		FVector TorqueWorld = bodyTransform.TransformVectorNoScale(AngularAccelerationLocal); 
-		BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  
+		BodyInstance->AddTorqueInRadians(TorqueWorld, false, false);  // global space
 */	
 
 	}
@@ -723,8 +734,10 @@ struct FAttitudeController
 	// I must change all INputs to Local Space becaue Inbertia is Local Space
 	// And I must return the Result in World Space
 	// Furthermore I would like to use Quaternions for Attitudes
-	FVector StepRateRollSpd(FVector CurrentAttitude, FVector CurrentVelocity, FVector TargetAttitude, FVector InertiaTensor)
+	FVector StepRateRollSpd(FQuat CurrentAttitude, FVector CurrentVelocity, FQuat TargetAttitude, FVector InertiaTensor)
 	{
+/*
+		//FMath::DegreesToRadians(AttitudeVehicleQuat.Euler())
 		FVector kp = SPD_KP; 
 		FVector kd = SPD_KD; 
 		float dt = DeltaTime; 
@@ -735,9 +748,11 @@ struct FAttitudeController
 			1.0f / (I.Z + kd.Z * dt) 
 		);
 		FVector kpg = -g * kp; 
-		FVector kdg = g * kd;
+		FVector kdg = -g * kd;
 
 		return FVector(kpg * (CurrentAttitude + CurrentVelocity*dt - TargetAttitude) + kdg * CurrentVelocity) * dt; // * dt nötig hier??)
+		*/
+	return FVector::ZeroVector;
 	}
 
 	// Run the roll angular velocity PID controller and return the output in rads

@@ -98,11 +98,6 @@ public:
 	UPROPERTY()
 	class UClass * hudWidgetClass;
 	
-	// Delegates from QuadcopterComponent for BP
-	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD")
-	float GetSpeedOverGroundKmh();
-
-
 
 	// Networking
 	UPROPERTY(Category = "QuadcopterPawn", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

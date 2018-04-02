@@ -118,6 +118,37 @@ public:
     UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
 	float GetSpeedOverGroundKmh();
 
+    UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetSpeedOverGroundMph();
+
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetTrueAirspeedKmh();
+
+    UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetTrueAirspeedMph();
+
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetForwardSpeedOverGroundKmh();
+
+    UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetForwardSpeedOverGroundMph();
+
+    UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetTrueAltitudeM();
+
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetTrueAltitudeFt();
+
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetCompassDirectionNorm();
+
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetAttitudePitchNorm();
+
+	UFUNCTION(BlueprintCallable, Category = "QuadcopterFlightModel|HUD") 
+	float GetAttitudeRollNorm();
+	
+
 
     // Called when the game starts
     virtual void BeginPlay() override;

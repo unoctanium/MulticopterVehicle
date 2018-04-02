@@ -19,10 +19,10 @@ struct FAHRS
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "LinearVelocity in m/s")) float LinearVelocity = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Velocity Vector in m/s")) FVector VelocityVector = FVector(0.0f, 0.0f, 0.0f);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "LinearVelocity over Ground in m/s")) float LinearVelocity2D = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "LinearVelocity Forward in m/s")) float LinearVelocityX = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Velocity in deg/s")) FVector AngularVelocity = FVector(0.0f, 0.0f, 0.0f);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Linear Acceleration in m/s^2")) float LinearAcceleration = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Acceleration in deg/s^2")) FVector AngularAcceleration = FVector(0.0f, 0.0f, 0.0f);
-
 
 	// ODO: Need these for FlightController
 	// Overthink old values above...
@@ -61,6 +61,7 @@ struct FAHRS
 		LinearVelocity = BodyInstance->GetUnrealWorldVelocity().Size() / 100.0f; // TAS in m/s
 		VelocityVector = BodyInstance->GetUnrealWorldVelocity() / 100.0f; // in m / s
 		LinearVelocity2D = BodyInstance->GetUnrealWorldVelocity().Size2D() / 100.0f; // Speed over ground
+		LinearVelocityX = BodyInstance->GetUnrealWorldVelocity().X / 100.0f; // Speed over ground Forward
 		FVector OldAngularVelocity = FVector(AngularVelocity);
 		AngularVelocity = FMath::RadiansToDegrees(BodyInstance->GetUnrealWorldAngularVelocityInRadians());
 		LinearAcceleration = (OldLinearVelocity - LinearVelocity) / DeltaTime;

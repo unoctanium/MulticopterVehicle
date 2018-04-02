@@ -85,8 +85,6 @@ void UQuadcopterFlightModel::TickComponent(float DeltaTime, ELevelTick TickType,
 
 
 
-
-
 // Pilot Input Related Stuff
 
 void UQuadcopterFlightModel::InputRoll(float InValue) 
@@ -151,5 +149,72 @@ FVector UQuadcopterFlightModel::GetUDPDebugOutput()
 
 float UQuadcopterFlightModel::GetSpeedOverGroundKmh()
 {
-	return AHRS.LinearVelocity2D;
+	// 1 m/s = 3.6 km/h
+	return AHRS.LinearVelocity2D * 3.6;
+}
+
+float UQuadcopterFlightModel::GetSpeedOverGroundMph()
+{
+	// 1 mph = 1,609344 kmh.
+	return AHRS.LinearVelocity2D / 1.609344 * 3.6;
+}
+
+
+float UQuadcopterFlightModel::GetTrueAirspeedKmh()
+{
+	// 1 m/s = 3.6 km/h
+	return AHRS.LinearVelocity * 3.6;
+}
+
+float UQuadcopterFlightModel::GetTrueAirspeedMph()
+{
+	// 1 mph = 1,609344 kmh.
+	return AHRS.LinearVelocity / 1.609344 * 3.6;
+}
+
+float UQuadcopterFlightModel::GetForwardSpeedOverGroundKmh()
+{
+	return AHRS.LinearVelocityX * 3.6;
+}
+
+float UQuadcopterFlightModel::GetForwardSpeedOverGroundMph()
+{
+	// 1 mph = 1,609344 kmh.
+	return AHRS.LinearVelocityX / 1.609344 * 3.6;
+}
+
+float UQuadcopterFlightModel::GetTrueAltitudeM()
+{
+	// 1 m = 3,28084 ft.
+	return AHRS.Position.Z * 3.28084;
+}
+
+
+float UQuadcopterFlightModel::GetTrueAltitudeFt()
+{
+	// 1 m = 3,28084 ft.
+	return AHRS.Position.Z * 3.28084;
+}
+
+float UQuadcopterFlightModel::GetCompassDirectionNorm()
+{
+	// Returns Z World Orientation in 0..1
+	//float NormAngle = FMath::ClampAngle(AHRS.Rotation.Yaw, 0, 360) / 360;
+	float NormAngle = fmod(AHRS.Rotation.Yaw + 360, 360) / 360 + 0.5;
+	UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
+	return NormAngle;
+}
+
+float UQuadcopterFlightModel::GetAttitudePitchNorm()
+{
+	float NormAngle = 1- (fmod(AHRS.Rotation.Pitch + 360 +45 , 360) / 360); // +45  correcting a tecture bug here
+	UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
+	return NormAngle;
+}
+
+float UQuadcopterFlightModel::GetAttitudeRollNorm()
+{
+	float NormAngle = fmod(AHRS.Rotation.Roll + 360, 360) / 360;
+	UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
+	return NormAngle;
 }

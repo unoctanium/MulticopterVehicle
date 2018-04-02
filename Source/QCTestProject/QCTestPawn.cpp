@@ -93,14 +93,16 @@ AQCPawn::AQCPawn()
     }
     hudWidget->SetWidgetSpace(EWidgetSpace::World);
     hudWidget->SetWidgetClass(hudWidgetClass);
+	hudWidget->RegisterComponent();
+	hudWidget->SetupAttachment(PawnMesh);
 	hudWidget->SetDrawSize(FVector2D(1280.0f, 720.0f));
-    hudWidget->SetRelativeLocation(FVector(20.0f, 0.0f, 100.0f));
+	hudWidget->SetRelativeLocation(FVector(20.0f, 0.0f, 80.0f));    
+	hudWidget->SetRelativeRotation(FRotator(-30.0f,-180.0f,0.0f));
 	hudWidget->SetRelativeScale3D(FVector(0.075, 0.075, 0.075));
-	hudWidget->SetRelativeRotation(FRotator(0.0f,-180.0f,-30.0f));
     //udWidget->GeometryMode = EWidgetGeometryMode::Cylinder;
 	//hudWidget->CylinderArcAngle = 30.0f;
     hudWidget->SetVisibility(true);
-    hudWidget->RegisterComponent();
+
 
 
 	// Create UDP Actor
@@ -395,11 +397,3 @@ void AQCPawn::InputKillTrajectory()
 	QuadcopterFlightModel->InputKillTrajectory();
 }
 
-
-
-/* VR Related stuff */
-
-float AQCPawn::GetSpeedOverGroundKmh()
-{
-	return QuadcopterFlightModel->GetSpeedOverGroundKmh();
-}

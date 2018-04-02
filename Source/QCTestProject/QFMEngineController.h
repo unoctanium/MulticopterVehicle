@@ -173,7 +173,7 @@ struct FEngineController
 
 		//PrimitiveComponent->SetPhysicsAngularVelocityInRadians(TotalTorque, true, NAME_None);
 TotalTorque=RotationRequest;
-TotalThrust=FVector::ZeroVector;
+//TotalThrust=FVector::ZeroVector;
 	}
 
 	

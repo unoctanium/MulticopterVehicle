@@ -94,8 +94,8 @@ AQCPawn::AQCPawn()
     hudWidget->SetWidgetSpace(EWidgetSpace::World);
     hudWidget->SetWidgetClass(hudWidgetClass);
 	hudWidget->SetDrawSize(FVector2D(1280.0f, 720.0f));
-    hudWidget->SetRelativeLocation(FVector(70.0f, 0.0f, 30.0f));
-	//hudWidget->SetRelativeScale3D(FVector(1.0 / MeshScale / 3.0, 1.0 / MeshScale / 3.0, 1.0 / MeshScale / 3.0));
+    hudWidget->SetRelativeLocation(FVector(20.0f, 0.0f, 100.0f));
+	hudWidget->SetRelativeScale3D(FVector(0.075, 0.075, 0.075));
 	hudWidget->SetRelativeRotation(FRotator(0.0f,-180.0f,-30.0f));
     //udWidget->GeometryMode = EWidgetGeometryMode::Cylinder;
 	//hudWidget->CylinderArcAngle = 30.0f;

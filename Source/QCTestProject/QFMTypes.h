@@ -11,7 +11,7 @@ typedef unsigned char 		uint8;		// 8-bit  unsigned.
 UENUM(BlueprintType)                 
 enum class EFlightMode : uint8
 {
-	FM_Direct		UMETA(DisplayName = "Direct Mode"),
+	FM_Direct		UMETA(DisplayName = "Direct Mode (No Stabilizer)"),
 	FM_Stabilize	UMETA(DisplayName = "Stabilize Mode"),
 	FM_AltHold		UMETA(DisplayName = "Stabilize Mode with Alt Hold"),
 	FM_Accro		UMETA(DisplayName = "Accro Mode")
@@ -22,9 +22,8 @@ enum class EFlightMode : uint8
 UENUM(BlueprintType)                 
 enum class EControlLoop : uint8
 {
-	ControlLoop_None			UMETA(DisplayName = "Dont use Stabilizer"),
+	ControlLoop_P			UMETA(DisplayName = "P Controller"),
 	ControlLoop_PID			UMETA(DisplayName = "PID Controller"),
-	ControlLoop_FPD			UMETA(DisplayName = "Forward PD Controller"),
 	ControlLoop_SPD			UMETA(DisplayName = "Stable PD Controller")
 };
 

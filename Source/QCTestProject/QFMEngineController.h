@@ -354,7 +354,6 @@ TotalTorque=RotationRequest;
 	}
 		
 
-	//float SetThrottleOut(float ThrottleIn, bool ResetAttitudeController = true)
 	void SetDesiredThrottlePercent(float ThrottleIn)
 	{
 		ThrottleRequest = ThrottleIn;

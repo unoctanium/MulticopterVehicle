@@ -140,7 +140,10 @@ struct FVehicle
 		GEngine->AddOnScreenDebugMessage(-1, 0, ColorIn, FString::Printf(TEXT("Mass (kg): %f"), Mass), true, DebugFontSizeIn);
 	}
 	
-
+	float GetGravity()
+	{
+		return Gravity;
+	}
 
 };
 

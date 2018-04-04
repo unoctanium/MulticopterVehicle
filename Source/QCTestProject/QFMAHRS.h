@@ -21,7 +21,8 @@ struct FAHRS
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "LinearVelocity over Ground in m/s")) float LinearVelocity2D = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "LinearVelocity Forward in m/s")) float LinearVelocityX = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Velocity in deg/s")) FVector AngularVelocity = FVector(0.0f, 0.0f, 0.0f);
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Linear Acceleration in m/s^2")) float LinearAcceleration = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Linear Acceleration in m/s^2")) float LinearAcceleration = 0.0f; // Word Space, Direction of VelocityVector
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Linear Acceleration in m/s^2")) FVector LinearAccelerationVector = FVector::ZeroVector; // Word Space, All Directions
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ToolTip = "Angular Acceleration in deg/s^2")) FVector AngularAcceleration = FVector(0.0f, 0.0f, 0.0f);
 
 	// ODO: Need these for FlightController
@@ -57,15 +58,23 @@ struct FAHRS
 		
 		Position = bodyTransform.GetTranslation() / 100.0f; // in m
 		Rotation = bodyTransform.GetRotation().Rotator(); // in deg
+		
 		float OldLinearVelocity = LinearVelocity;
 		LinearVelocity = BodyInstance->GetUnrealWorldVelocity().Size() / 100.0f; // TAS in m/s
-		VelocityVector = BodyInstance->GetUnrealWorldVelocity() / 100.0f; // in m / s
+		
+		FVector OldLinearVelocityVector = VelocityVector;
+		VelocityVector = BodyInstance->GetUnrealWorldVelocity() / 100.0f; // in m / s  // WORLD
+
 		LinearVelocity2D = BodyInstance->GetUnrealWorldVelocity().Size2D() / 100.0f; // Speed over ground
 		LinearVelocityX = BodyInstance->GetUnrealWorldVelocity().X / 100.0f; // Speed over ground Forward
+		
 		FVector OldAngularVelocity = FVector(AngularVelocity);
 		AngularVelocity = FMath::RadiansToDegrees(BodyInstance->GetUnrealWorldAngularVelocityInRadians());
-		LinearAcceleration = (OldLinearVelocity - LinearVelocity) / DeltaTime;
-		AngularAcceleration = (OldAngularVelocity - AngularVelocity) / DeltaTime;
+
+		LinearAcceleration = (OldLinearVelocity - LinearVelocity) / DeltaTime;  // This is the wrong direction of calc. Should be actual - old. check in code where I use it @ODO
+		AngularAcceleration = (OldAngularVelocity - AngularVelocity) / DeltaTime; // This is wrong as well! @ODO
+		
+		LinearAccelerationVector = (VelocityVector - OldLinearVelocityVector) / DeltaTime;
 
 	///NEW
 		WorldRotationQuat = bodyTransform.GetRotation(); // in rad
@@ -93,6 +102,17 @@ struct FAHRS
 	{
 		return WorldTranslationVect.Z;
 	}
+
+	FVector GetWorldVelocity()
+	{
+		return VelocityVector;
+	}
+
+	FVector GetWorldAccelerationXYZ()
+	{
+		return LinearAccelerationVector;
+	}
+	
 
 
 

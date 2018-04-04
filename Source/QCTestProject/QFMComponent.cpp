@@ -43,7 +43,7 @@ void UQuadcopterFlightModel::BeginPlay()
 	PilotInput.Init(BodyInstance, Parent);
 	AHRS.Init(BodyInstance, Parent);
 	AttitudeController.Init(BodyInstance, Parent, &PilotInput, &AHRS, &PositionController, &EngineController);
-	PositionController.Init(BodyInstance, Parent, &AHRS);
+	PositionController.Init(BodyInstance, Parent, &AHRS, &Vehicle, &EngineController);
 	EngineController.Init(BodyInstance, Parent, &Vehicle);
 
 	// Prepare Substepping, if requested
@@ -201,20 +201,20 @@ float UQuadcopterFlightModel::GetCompassDirectionNorm()
 	// Returns Z World Orientation in 0..1
 	//float NormAngle = FMath::ClampAngle(AHRS.Rotation.Yaw, 0, 360) / 360;
 	float NormAngle = fmod(AHRS.Rotation.Yaw + 360, 360) / 360 + 0.5;
-	UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
+	//UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
 	return NormAngle;
 }
 
 float UQuadcopterFlightModel::GetAttitudePitchNorm()
 {
 	float NormAngle = 1- (fmod(AHRS.Rotation.Pitch + 360 +45 , 360) / 360); // +45  correcting a tecture bug here
-	UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
+	//UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
 	return NormAngle;
 }
 
 float UQuadcopterFlightModel::GetAttitudeRollNorm()
 {
 	float NormAngle = fmod(AHRS.Rotation.Roll + 360, 360) / 360;
-	UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
+	//UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
 	return NormAngle;
 }

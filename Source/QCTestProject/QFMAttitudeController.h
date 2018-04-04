@@ -51,9 +51,6 @@ struct FAttitudeController
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Up in m/s in Stab/Accro Mode")) 
 	float PilotSpeedUp = 5.0f;   
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Down in m/s in AltHold Mode")) 
-	float DesiredVerticalSpeed = 3.0f;   
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Desired Z Accel in Alt Hold Mode in m/s^2")) 
 	float PilotZAccel = 1.5f;   
@@ -211,7 +208,6 @@ struct FAttitudeController
 		if (!PositionController->IsActiveZ())
 		{
 			PositionController->SetAltTargetToCurrentAlt();
-			PositionController->SetDesiredVelocityZ(DesiredVerticalSpeed);
 		}
 	}
 
@@ -287,8 +283,8 @@ struct FAttitudeController
 
 		float TakeoffClimbRate = 0.0f;
 
-		PositionController->SetMaxVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
-		PositionController->SetMaxAccelerationZ(PilotZAccel);
+		//PositionController->SetMaxVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
+		//PositionController->SetMaxAccelerationZ(PilotZAccel);
 
 		float TargetRoll;
 		float TargetPitch;

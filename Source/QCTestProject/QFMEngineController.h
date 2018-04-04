@@ -163,10 +163,13 @@ struct FEngineController
 		UpdateThrottleRPYMix();
 
 		// Mix Pilot Input to meet Frame Mode 
-		MixEngines();
+		//MixEngines();
+		for(int i=0; i<4;i++)
+			EngineMixPercent[i]=ThrottleRequest;
 	
 		// Apply Engine RPM ... Now: Only Mixed but no Attitude Controller
 		SetEnginesFromMixer();
+		
 
 		// Calculate new Forces
 		GetEngineForces();
@@ -174,6 +177,7 @@ struct FEngineController
 		//PrimitiveComponent->SetPhysicsAngularVelocityInRadians(TotalTorque, true, NAME_None);
 TotalTorque=RotationRequest;
 //TotalThrust=FVector::ZeroVector;
+
 	}
 
 	

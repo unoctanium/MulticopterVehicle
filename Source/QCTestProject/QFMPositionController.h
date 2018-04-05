@@ -7,6 +7,9 @@
 #include "Components/PrimitiveComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
 
+
+#include "QFMTypes.h"
+#include "QFMPIDController.h"
 #include "QFMAHRS.h"
 #include "QFMEngineController.h"
 #include "QFMVehicle.h"
@@ -21,14 +24,39 @@ struct FPositionController
 {
 	GENERATED_BODY()
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Activate Position Z Controller"))
+	bool bIsActiveZ = true;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Up in m/s in AltHold Mode")) 
+	float MaxClimbVelocityZ = 20.0f;   
+		
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Down in m/s in AltHold Mode")) 
+	float MaxDescentVelocityZ = 20.0f;   
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Desired Z Accel in Alt Hold Mode in m/s^2")) 
+	float MaxAccelerationZ = 9.8f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Stabilizer-Loop to use for Translations")) 
+	EControlLoop TranslationControlLoop = EControlLoop::ControlLoop_P;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID"))
+	FVector RateZPidSettings = FVector(0.0f, 0.0f, 0.0f);
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
+	float SPDDamping = 1.0f;	
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Frequency. Reach 95% of target in 1/Freq secs"))
+	float SPDFrequency = 0.1f;
+
+
 
 	/*--- PARAMETERS ---*/
-	UPROPERTY() float MaxClimbVelocityZ = 0.0f;
-	UPROPERTY() float MaxDescentVelocityZ = 0.0f;
-	UPROPERTY() float MaxAccelerationZ = 0.0f;
 	UPROPERTY() float PosTargetZ = 0.0f;
-	UPROPERTY() bool bIsActiveZ = true;
+	UPROPERTY() bool bIsLockedZ = false;
 	
+	// PIDs
+	UPROPERTY() FPIDController RateZPid;
+
 
 	/*--- INTERFACE DATA ---*/
 	// Copy of Parent Data. Put inside here during Init and Tock 
@@ -47,14 +75,22 @@ struct FPositionController
 		EngineController = EngineControllerIn;
 		Vehicle = VehicleIn;
 
-		bIsActiveZ = true;
+		//bIsActiveZ = true;
+		bIsLockedZ = false;
+
+		// Init Pids with min,max = -1..1. We normalize Rates in RunZController, so we allways have values from 0..1
+		RateZPid.Init(-1, 1, RateZPidSettings.X, RateZPidSettings.Y, RateZPidSettings.Z);
 
 	}
 
 
 	void Reset()
 	{
-		bIsActiveZ = true;
+		//bIsActiveZ = true;
+		bIsLockedZ = false;
+
+		// ResetPids
+		RateZPid.Reset();
 	}
 
 	
@@ -81,6 +117,7 @@ struct FPositionController
 	void SetAltTarget(float AltIn)
 	{
 		PosTargetZ = AltIn;
+		bIsLockedZ = true;
 	}
 
 
@@ -88,12 +125,27 @@ struct FPositionController
 	{
 		//pos_control->set_alt_target_to_current_alt(); 
 		PosTargetZ = AHRS->GetWorldAltitude();
+		bIsLockedZ = true;
 	}
 	
 
 	void SetAltTargetFromClimbRate(float TargetClimbRate)
 	{
 		//set_alt_target_from_climb_rate_ff 
+		TargetClimbRate = FMath::Clamp<float>(TargetClimbRate, -MaxDescentVelocityZ, MaxClimbVelocityZ);
+
+		if (FMath::Abs(TargetClimbRate) < 0.001f  ) {
+			if(!bIsLockedZ)
+			{
+				SetAltTargetToCurrentAlt(); // Will lock bIsLockedZ
+				return;
+			}
+			else
+			{
+				return;
+			}
+		}
+		bIsLockedZ = false;
 		PosTargetZ = AHRS->GetWorldAltitude() + TargetClimbRate * DeltaTime;
 	}
 
@@ -136,20 +188,20 @@ struct FPositionController
     	VelocityTargetZ = PosErrorZ / DeltaTime;
 
     	// check speed limits
-        if (VelocityTargetZ < MaxDescentVelocityZ) 
-		{
-        	VelocityTargetZ = MaxDescentVelocityZ;
-   		}
-    	if (VelocityTargetZ > MaxClimbVelocityZ) 
+        if (VelocityTargetZ > MaxClimbVelocityZ) 
 		{
         	VelocityTargetZ = MaxClimbVelocityZ;
+   		}
+    	if (VelocityTargetZ < -MaxDescentVelocityZ) 
+		{
+        	VelocityTargetZ = -MaxDescentVelocityZ;
         }
 
     	// the following section calculates acceleration required to achieve the velocity target
 
     	float VelocityCurrentZ = AHRS->GetWorldVelocity().Z;
 
-		AccelerationTargetZ = (VelocityTargetZ - VelocityCurrentZ) / DeltaTime;
+		AccelerationTargetZ = (VelocityTargetZ - VelocityCurrentZ); // / DeltaTime;
 		float AccelerationCurrentZ = AHRS->GetWorldAccelerationXYZ().Z;// + Vehicle->GetGravity();
 		
 
@@ -159,8 +211,9 @@ struct FPositionController
 
 		//
 
-		float AccelerationToApplyZ = AccelerationTargetZ - AccelerationCurrentZ;
+		//float AccelerationToApplyZ = AccelerationTargetZ;
 
+/*
 		// check accel limits
 		if (AccelerationToApplyZ > 0)
 		{
@@ -176,28 +229,63 @@ struct FPositionController
 				AccelerationToApplyZ = -MaxAccelerationZ;
 			}
 		}
-
-
-
+*/
 
 		// the following section calculates a desired throttle needed to achieve the acceleration target
-		float ThrottleOut = AccelerationToApplyZ / MaxAccelerationZ;
-		ThrottleOut += EngineController->GetThrottleHover();
+		// Normalize Accel Request
+		float DesiredThrottleOut = (AccelerationTargetZ - AccelerationCurrentZ) / MaxAccelerationZ;
+		
+		// Sanity Check
+		DesiredThrottleOut = FMath::Clamp(DesiredThrottleOut, 0.0f, 1.0f);
+
+		float ThrottleOut = 0.0f;
+
+		if(TranslationControlLoop == EControlLoop::ControlLoop_P)
+		{
+			// P-Controller
+			ThrottleOut = DesiredThrottleOut;
+		}
+		else if (TranslationControlLoop == EControlLoop::ControlLoop_PID)
+		{
+			// PID Controller
+			ThrottleOut = RateZPid.Calculate(DesiredThrottleOut, AccelerationCurrentZ / MaxAccelerationZ, DeltaTime);
+		}
+		else if (TranslationControlLoop == EControlLoop::ControlLoop_SPD)
+		{
+			// FPD-Controller 
+    	    ThrottleOut = StepAccelZSpd( AccelerationCurrentZ / MaxAccelerationZ, DesiredThrottleOut);
+		}
+
+
+		// ThrottleOut += EngineController->GetThrottleHover();
+
+		// Sanity Check
 		ThrottleOut = FMath::Clamp(ThrottleOut, 0.0f, 1.0f);
 
 
 
-		UE_LOG(LogTemp,Display,TEXT("ALT: ZA %f\tZT %f\tZE %f"),CurrentAlt, PosTargetZ, PosErrorZ);
+		UE_LOG(LogTemp,Display,TEXT("ALT: ZA %f\tZT %f\tZE %f\t\t %d"),CurrentAlt, PosTargetZ, PosErrorZ, bIsLockedZ);
 		UE_LOG(LogTemp,Display,TEXT("VEL: VA %f\tVT %f"),VelocityCurrentZ, VelocityTargetZ);
-		UE_LOG(LogTemp,Display,TEXT("ACC: AA %f\tAT %f\tAE %f"),AccelerationCurrentZ, AccelerationTargetZ, AccelerationToApplyZ);
-		UE_LOG(LogTemp,Display,TEXT("THR: TO %f\tAH %f"),ThrottleOut, EngineController->GetThrottleHover());
-
-
-
+		UE_LOG(LogTemp,Display,TEXT("ACC: AA %f\tAT %f"),AccelerationCurrentZ, AccelerationTargetZ);
+		UE_LOG(LogTemp,Display,TEXT("THR: TO %f\tAH %f"),DesiredThrottleOut, ThrottleOut);
 
 
 		EngineController->SetDesiredThrottlePercent(ThrottleOut);
+	}
 
+
+	// Run the TZranslational Z Acceleration FPD controller and return the output detla w -1..1
+	float StepAccelZSpd(float Current, float Target)
+	{
+		float kp = SPDFrequency * SPDFrequency * 9.0f; 
+		float kd = 4.5f * SPDFrequency * SPDDamping; 
+		float dt = DeltaTime; 
+		
+		float g = 1.0f / (1.0f + kd * dt + kp * dt * dt); 
+		float kpg = kp * g; 
+		float kdg = (kd + kp * dt) * g; 
+
+		return (kpg * Target - kdg * Current);
 	}
 
 

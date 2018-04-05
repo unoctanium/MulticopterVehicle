@@ -97,7 +97,7 @@ AQCPawn::AQCPawn()
 	//hudWidget->SetupAttachment(PawnMesh);
 	hudWidget->AttachToComponent(PawnMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);
 	hudWidget->SetDrawSize(FVector2D(1280.0f, 720.0f));
-	hudWidget->SetRelativeLocation(FVector(20.0f, 0.0f, 80.0f));    
+	hudWidget->SetRelativeLocation(FVector(20.0f, 0.0f, 50.0f));    
 	hudWidget->SetRelativeRotation(FRotator(-30.0f,-180.0f,0.0f));
 	hudWidget->SetRelativeScale3D(FVector(0.075, 0.075, 0.075));
     //udWidget->GeometryMode = EWidgetGeometryMode::Cylinder;

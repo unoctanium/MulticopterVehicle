@@ -84,10 +84,10 @@ public:
 		float CamElevation = 37.0f;
 
 	UPROPERTY(Category = "QuadcopterPawn|Camera", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float VRCamDistance = 30.0f;
+		float VRCamDistance = 20.0f;
 
 	UPROPERTY(Category = "QuadcopterPawn|Camera", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		float VRCamElevation = 80.0f;
+		float VRCamElevation = 50.0f;
 
 
 

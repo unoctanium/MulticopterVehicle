@@ -163,9 +163,11 @@ struct FEngineController
 		UpdateThrottleRPYMix();
 
 		// Mix Pilot Input to meet Frame Mode 
+
 		//MixEngines();
-		for(int i=0; i<4;i++)
-			EngineMixPercent[i]=ThrottleRequest;
+/// Here we fake. Engine Controller is still disfunctional!
+for(int i=0; i<4;i++)
+	EngineMixPercent[i]=ThrottleRequest;
 	
 		// Apply Engine RPM ... Now: Only Mixed but no Attitude Controller
 		SetEnginesFromMixer();
@@ -175,6 +177,7 @@ struct FEngineController
 		GetEngineForces();
 
 		//PrimitiveComponent->SetPhysicsAngularVelocityInRadians(TotalTorque, true, NAME_None);
+/// Here we fake. Engine Controller is still disfunctional!3
 TotalTorque=RotationRequest;
 //TotalThrust=FVector::ZeroVector;
 

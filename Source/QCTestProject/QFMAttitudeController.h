@@ -40,21 +40,12 @@ struct FAttitudeController
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Zero Pos on Throttle for Accro Mode. Must be 0..1")) 
 	float AccroThrottleMid = 0.5f;   
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Down in m/s in AltHold Mode")) 
-	float PilotMaxSpeedDown = 10.0f;   
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Up in m/s in AltHold Mode")) 
-	float PilotMaxSpeedUp = 7.0f;   
-	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Down in m/s in Stab/Accro Mode")) 
-	float PilotSpeedDown = 5.0f;   
+	float PilotSpeedDown = 20.0f;   
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Max Speed Up in m/s in Stab/Accro Mode")) 
-	float PilotSpeedUp = 5.0f;   
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Desired Z Accel in Alt Hold Mode in m/s^2")) 
-	float PilotZAccel = 1.5f;   
-	
+	float PilotSpeedUp = 20.0f;   
+		
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "1..10 , 4.5 = 200 (deg/s) Max rotation rate of yaw axis")) 
 	float YawPGain = 200.0f;   
 	
@@ -73,15 +64,15 @@ struct FAttitudeController
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Stabilizer-Loop to use for Rotations")) 
 	EControlLoop RotationControlLoop = EControlLoop::ControlLoop_P;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY Rate PID P"))
-	FVector RatePidP = FVector(1.0f, 1.0f, 1.0f);
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Roll Rate PID"))
+	FVector RateRollPidSettings = FVector(1.0f, 1.0f, 1.0f);
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY Rate PID I"))
-	FVector RatePidI = FVector(0.0f, 0.0f, 0.0f);
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Pitch Rate PID"))
+	FVector RatePitchPidSettings = FVector(0.0f, 0.0f, 0.0f);
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "RPY Rate PID D"))
-	FVector RatePidD = FVector(0.0f, 0.0f, 0.0f);
-
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID"))
+	FVector RateYawPidSettings = FVector(0.0f, 0.0f, 0.0f);
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
 	float SPDDamping = 1.0f;	
 	
@@ -142,9 +133,9 @@ struct FAttitudeController
 		EngineController = EngineControllerIn;
 
 		// Init Pids with min,max = -1..1. We normalize velocities in RunQuat(). So we allways have the same PID-Settinghs, regardeless of Max Rates
-		RateRollPid.Init(-1, 1, RatePidP.X, RatePidI.X, RatePidD.X);
-		RatePitchPid.Init(-1, 1, RatePidP.Y, RatePidI.Y, RatePidD.Y);
-		RateYawPid.Init(-1, 1, RatePidP.Z, RatePidI.Z, RatePidD.Z);
+		RateRollPid.Init(-1, 1, RateRollPidSettings.X, RateRollPidSettings.Y, RateRollPidSettings.Z);
+		RatePitchPid.Init(-1, 1, RatePitchPidSettings.X, RatePitchPidSettings.Y, RatePitchPidSettings.Z);
+		RateYawPid.Init(-1, 1, RateYawPidSettings.X, RateYawPidSettings.Y, RateYawPidSettings.Z);
 
 		Reset();
 
@@ -202,9 +193,6 @@ struct FAttitudeController
 
 	void InitModeAltHold()
 	{
-		PositionController->SetMaxVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
-		PositionController->SetMaxAccelerationZ(PilotZAccel);
-
 		if (!PositionController->IsActiveZ())
 		{
 			PositionController->SetAltTargetToCurrentAlt();
@@ -283,9 +271,6 @@ struct FAttitudeController
 
 		float TakeoffClimbRate = 0.0f;
 
-		//PositionController->SetMaxVelocityZ(-PilotMaxSpeedDown, PilotMaxSpeedUp);
-		//PositionController->SetMaxAccelerationZ(PilotZAccel);
-
 		float TargetRoll;
 		float TargetPitch;
 		float TargetYawRate;
@@ -294,12 +279,10 @@ struct FAttitudeController
 		GetPilotDesiredLeanAngles(PilotInput.X, PilotInput.Y, TargetRoll, TargetPitch);
 		TargetYawRate = GetPilotDesiredYawRate(PilotInput.Z);
 		TargetClimbRate = GetPilotDesiredClimbRate(PilotInput.W);
-		TargetClimbRate = FMath::Clamp<float>(TargetClimbRate, -PilotMaxSpeedDown, PilotMaxSpeedUp);
-
+		
 		InputAngleRollPitchRateYaw(TargetRoll, TargetPitch, TargetYawRate);
 		PositionController->SetAltTargetFromClimbRate(TargetClimbRate);
 		PositionController->UpdateZController();
-
 	}
 
 

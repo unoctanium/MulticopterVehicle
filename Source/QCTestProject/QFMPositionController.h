@@ -18,7 +18,7 @@
 
 
 
-/*--- Implementatrion of the Position-Controller ---*/
+/*--- Implementation of the Position-Controller ---*/
 USTRUCT(BlueprintType)
 struct FPositionController
 {
@@ -40,13 +40,13 @@ struct FPositionController
 	EControlLoop TranslationControlLoop = EControlLoop::ControlLoop_P;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "Yaw Rate PID"))
-	FVector RateZPidSettings = FVector(0.0f, 0.0f, 0.0f);
+	FVector RateZPidSettings = FVector(0.1f, 0.0f, 0.001f);
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Damping. 1=crit damped, <1 = underdamped, >1 = overdamped"))
-	float SPDDamping = 1.0f;	
+	float SPDDamping = 6.0f;	
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "QuadcopterFlightModel", meta = (ToolTip = "FPD Frequency. Reach 95% of target in 1/Freq secs"))
-	float SPDFrequency = 0.1f;
+	float SPDFrequency = 100.0f;
 
 
 
@@ -233,27 +233,32 @@ struct FPositionController
 
 		// the following section calculates a desired throttle needed to achieve the acceleration target
 		// Normalize Accel Request
-		float DesiredThrottleOut = (AccelerationTargetZ - AccelerationCurrentZ) / MaxAccelerationZ;
+				
+		//Trying Workaround...
+		// Works with Stable PD 100/10
+		//AccelerationTargetZ = VelocityTargetZ / MaxClimbVelocityZ * MaxAccelerationZ;
+		//AccelerationCurrentZ = VelocityCurrentZ / MaxClimbVelocityZ * MaxAccelerationZ;
 		
-		// Sanity Check
-		DesiredThrottleOut = FMath::Clamp(DesiredThrottleOut, 0.0f, 1.0f);
 
 		float ThrottleOut = 0.0f;
 
 		if(TranslationControlLoop == EControlLoop::ControlLoop_P)
 		{
 			// P-Controller
-			ThrottleOut = DesiredThrottleOut;
+			ThrottleOut = (AccelerationTargetZ - AccelerationCurrentZ) / MaxAccelerationZ;;
+			//ThrottleOut += EngineController->GetThrottleHover();
 		}
 		else if (TranslationControlLoop == EControlLoop::ControlLoop_PID)
 		{
 			// PID Controller
-			ThrottleOut = RateZPid.Calculate(DesiredThrottleOut, AccelerationCurrentZ / MaxAccelerationZ, DeltaTime);
+			ThrottleOut = RateZPid.Calculate(AccelerationTargetZ / MaxAccelerationZ, AccelerationCurrentZ / MaxAccelerationZ, DeltaTime);
+			ThrottleOut += EngineController->GetThrottleHover();
 		}
 		else if (TranslationControlLoop == EControlLoop::ControlLoop_SPD)
 		{
 			// FPD-Controller 
-    	    ThrottleOut = StepAccelZSpd( AccelerationCurrentZ / MaxAccelerationZ, DesiredThrottleOut);
+    	    ThrottleOut = StepAccelZSpd(AccelerationTargetZ / MaxAccelerationZ,  AccelerationCurrentZ / MaxAccelerationZ);
+			//ThrottleOut += EngineController->GetThrottleHover();
 		}
 
 
@@ -263,19 +268,19 @@ struct FPositionController
 		ThrottleOut = FMath::Clamp(ThrottleOut, 0.0f, 1.0f);
 
 
-
+/*
 		UE_LOG(LogTemp,Display,TEXT("ALT: ZA %f\tZT %f\tZE %f\t\t %d"),CurrentAlt, PosTargetZ, PosErrorZ, bIsLockedZ);
 		UE_LOG(LogTemp,Display,TEXT("VEL: VA %f\tVT %f"),VelocityCurrentZ, VelocityTargetZ);
 		UE_LOG(LogTemp,Display,TEXT("ACC: AA %f\tAT %f"),AccelerationCurrentZ, AccelerationTargetZ);
-		UE_LOG(LogTemp,Display,TEXT("THR: TO %f\tAH %f"),DesiredThrottleOut, ThrottleOut);
-
+		UE_LOG(LogTemp,Display,TEXT("THR: TO %f\t"),ThrottleOut);
+*/
 
 		EngineController->SetDesiredThrottlePercent(ThrottleOut);
 	}
 
 
 	// Run the TZranslational Z Acceleration FPD controller and return the output detla w -1..1
-	float StepAccelZSpd(float Current, float Target)
+	float StepAccelZSpd(float Target, float Current)
 	{
 		float kp = SPDFrequency * SPDFrequency * 9.0f; 
 		float kd = 4.5f * SPDFrequency * SPDDamping; 

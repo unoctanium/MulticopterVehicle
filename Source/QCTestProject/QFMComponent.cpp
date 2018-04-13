@@ -207,7 +207,7 @@ float UQuadcopterFlightModel::GetCompassDirectionNorm()
 
 float UQuadcopterFlightModel::GetAttitudePitchNorm()
 {
-	float NormAngle = 1- (fmod(AHRS.Rotation.Pitch + 360 +45 , 360) / 360); // +45  correcting a tecture bug here
+	float NormAngle = AHRS.Rotation.Pitch / 90 ; // -1: down, 1: up
 	//UE_LOG(LogTemp,Display, TEXT("%f"),NormAngle);
 	return NormAngle;
 }
